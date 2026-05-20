@@ -1,4 +1,4 @@
-package com.example.studing.note.entity
+package com.example.studing.note
 
 import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
