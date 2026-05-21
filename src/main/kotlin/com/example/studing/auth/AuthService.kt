@@ -2,13 +2,16 @@ package com.example.studing.auth
 
 import com.example.studing.auth.dto.AuthResponse
 import com.example.studing.auth.dto.TokenResponse
+import com.example.studing.auth.entities.RefreshToken
+import com.example.studing.auth.entities.RevokedAccessToken
+import com.example.studing.auth.repository.RefreshTokenRepository
+import com.example.studing.auth.repository.RevokedAccessTokenRepository
 import com.example.studing.security.jwt.JwtService
 import com.example.studing.user.User
 import com.example.studing.user.UserRepository
 import com.example.studing.user.mapper.toResponse
 import org.bson.types.ObjectId
-import org.springframework.dao.DuplicateKeyException
-import org.springframework.security.authentication.BadCredentialsException
+import com.example.studing.common.exception.ApiException
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -21,15 +24,14 @@ import java.util.Base64
 class AuthService(
     private val userRepository: UserRepository,
     private val refreshTokenRepository: RefreshTokenRepository,
+    private val revokedAccessTokenRepository: RevokedAccessTokenRepository,
     private val jwtService: JwtService,
     private val passwordEncoder: PasswordEncoder,
 ) {
 
-    private val refreshTokenValidityDays = 30L
-
     fun register(name: String, email: String, password: String): AuthResponse {
         if (userRepository.findByEmail(email) != null) {
-            throw DuplicateKeyException("A user with that email already exists.")
+            throw ApiException.Conflict("A user with that email already exists.")
         }
         val user = userRepository.save(
             User(
@@ -44,11 +46,11 @@ class AuthService(
 
     fun login(email: String, password: String): AuthResponse {
         val user = userRepository.findByEmail(email)
-            ?: throw BadCredentialsException("Invalid credentials.")
+            ?: throw ApiException.Unauthorized("Invalid email.")
         val stored = user.hashedPassword
-            ?: throw BadCredentialsException("Invalid credentials.")
+            ?: throw ApiException.Unauthorized("Invalid email.")
         if (!passwordEncoder.matches(password, stored)) {
-            throw BadCredentialsException("Invalid credentials.")
+            throw ApiException.Unauthorized("Invalid password.")
         }
         val tokens = issueTokens(user.id)
         return AuthResponse(user.toResponse(), tokens.accessToken, tokens.refreshToken)
@@ -57,22 +59,31 @@ class AuthService(
     @Transactional
     fun refresh(refreshToken: String): TokenResponse {
         if (!jwtService.validateRefreshToken(refreshToken)) {
-            throw BadCredentialsException("Invalid refresh token.")
+            throw ApiException.Unauthorized("Invalid refresh token.")
         }
         val userId = ObjectId(jwtService.getUserIdFromToken(refreshToken))
         val hashed = sha256(refreshToken)
 
         val stored = refreshTokenRepository.findByUserIdAndHashedToken(userId, hashed)
-            ?: throw BadCredentialsException("Refresh token revoked or already used.")
+            ?: throw ApiException.Unauthorized("Refresh token revoked or already used.")
 
         refreshTokenRepository.delete(stored)
         return issueTokens(userId)
     }
 
-    fun logout(refreshToken: String) {
-        if (!jwtService.validateRefreshToken(refreshToken)) return
-        val userId = ObjectId(jwtService.getUserIdFromToken(refreshToken))
-        refreshTokenRepository.deleteByUserIdAndHashedToken(userId, sha256(refreshToken))
+    fun logout(refreshToken: String, accessToken: String?) {
+        if (jwtService.validateRefreshToken(refreshToken)) {
+            val userId = ObjectId(jwtService.getUserIdFromToken(refreshToken))
+            refreshTokenRepository.deleteByUserIdAndHashedToken(userId, sha256(refreshToken))
+        }
+        if (accessToken != null && jwtService.validateAccessToken(accessToken)) {
+            revokedAccessTokenRepository.save(
+                RevokedAccessToken(
+                    jti = jwtService.getJti(accessToken),
+                    expiresAt = jwtService.getExpiry(accessToken),
+                )
+            )
+        }
     }
 
     private fun issueTokens(userId: ObjectId): TokenResponse {
@@ -83,7 +94,7 @@ class AuthService(
             RefreshToken(
                 userId = userId,
                 hashedToken = sha256(refreshToken),
-                expiresAt = Instant.now().plus(refreshTokenValidityDays, ChronoUnit.DAYS),
+                expiresAt = Instant.now().plus(jwtService.refreshTokenValidityMs, ChronoUnit.MILLIS),
             )
         )
         return TokenResponse(accessToken, refreshToken)

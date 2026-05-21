@@ -1,0 +1,13 @@
+server:
+  port: 8181
+  error:
+    include-stacktrace: on_param
+    include-message: always
+
+logging:
+  level:
+    root: INFO
+    com.example.studing: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.mongodb.driver: WARN

@@ -1,16 +1,13 @@
-package com.example.studing.auth
+package com.example.studing.auth.entities
 
-import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.Instant
 
-@Document("refresh_tokens")
-data class RefreshToken(
-    val userId: ObjectId,
-    val hashedToken: String,
-    val createdAt: Instant = Instant.now(),
+@Document("revoked_access_tokens")
+data class RevokedAccessToken(
+    @Id val jti: String,
     @Indexed(expireAfter = "0s")
     val expiresAt: Instant,
 )

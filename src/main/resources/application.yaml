@@ -1,14 +1,11 @@
 spring:
   application:
     name: studing
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   mongodb:
     uri: ${MONGODB_CONNECTION_STRING}
-  security:
-    user:
-      password: test
-
-server:
-  port: 8181
+    auto-index-creation: false
 
 jwt:
   secret: ${JWT_SECRET_BASE64}

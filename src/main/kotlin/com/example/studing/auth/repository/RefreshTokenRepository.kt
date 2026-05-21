@@ -1,5 +1,6 @@
-package com.example.studing.auth
+package com.example.studing.auth.repository
 
+import com.example.studing.auth.entities.RefreshToken
 import org.bson.types.ObjectId
 import org.springframework.data.mongodb.repository.MongoRepository
 

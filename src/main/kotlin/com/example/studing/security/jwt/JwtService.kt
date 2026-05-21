@@ -5,8 +5,10 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.Instant
 import java.util.Base64
 import java.util.Date
+import java.util.UUID
 
 @Service
 class JwtService(
@@ -18,7 +20,8 @@ class JwtService(
     }
 
     private val accessTokenValidityMs  = 15L * 60L * 1000L            // 15 minutes
-    private val refreshTokenValidityMs = 30L * 24L * 60L * 60L * 1000L // 30 days
+    val refreshTokenValidityMs: Long
+        get() = 30L * 24L * 60L * 60L * 1000L // 30 days
 
     fun generateAccessToken(userId: String): String =
         generateToken(userId, "access", accessTokenValidityMs)
@@ -44,10 +47,23 @@ class JwtService(
         return claims.subject
     }
 
+    fun getJti(token: String): String {
+        val claims = parseAllClaims(token)
+            ?: throw IllegalArgumentException("Invalid token.")
+        return claims.id ?: throw IllegalArgumentException("Token has no jti.")
+    }
+
+    fun getExpiry(token: String): Instant {
+        val claims = parseAllClaims(token)
+            ?: throw IllegalArgumentException("Invalid token.")
+        return claims.expiration.toInstant()
+    }
+
     private fun generateToken(userId: String, type: String, validityMs: Long): String {
         val now = Date()
         val expiry = Date(now.time + validityMs)
         return Jwts.builder()
+            .id(UUID.randomUUID().toString())
             .subject(userId)
             .claim("type", type)
             .issuedAt(now)

@@ -1,5 +1,6 @@
 package com.example.studing.security.jwt
 
+import com.example.studing.auth.repository.RevokedAccessTokenRepository
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -11,6 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthFilter(
     private val jwtService: JwtService,
+    private val revokedAccessTokenRepository: RevokedAccessTokenRepository,
 ): OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -20,12 +22,14 @@ class JwtAuthFilter(
     ) {
         val authHeader = request.getHeader("Authorization")
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            if(jwtService.validateAccessToken(authHeader)) {
-                val userId = jwtService.getUserIdFromToken(authHeader)
-                val auth = UsernamePasswordAuthenticationToken(userId, null)
-                SecurityContextHolder.getContext().authentication = auth
+            if (jwtService.validateAccessToken(authHeader)) {
+                val jti = jwtService.getJti(authHeader)
+                if (!revokedAccessTokenRepository.existsByJti(jti)) {
+                    val userId = jwtService.getUserIdFromToken(authHeader)
+                    val auth = UsernamePasswordAuthenticationToken(userId, null, emptyList())
+                    SecurityContextHolder.getContext().authentication = auth
+                }
             }
-
         }
         filterChain.doFilter(request, response)
     }
