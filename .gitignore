@@ -41,3 +41,16 @@ out/
 
 ### Claude ###
 .claude
+
+### Logs ###
+logs/
+*.log
+*.log.gz
+
+### Env files ###
+.env
+.env.*
+!.env.example
+
+### Personal notes ###
+docs/NEXT_STEPS.md

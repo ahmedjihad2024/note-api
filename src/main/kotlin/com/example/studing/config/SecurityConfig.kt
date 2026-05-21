@@ -4,6 +4,7 @@ import com.example.studing.security.ApiResponseAccessDeniedHandler
 import com.example.studing.security.ApiResponseAuthenticationEntryPoint
 import com.example.studing.security.jwt.JwtAuthFilter
 import jakarta.servlet.DispatcherType
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -14,10 +15,15 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.CorsConfigurationSource
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableMethodSecurity
-class SecurityConfig {
+class SecurityConfig(
+    @Value($$"${app.cors.allowed-origins:}") private val allowedOrigins: List<String>,
+) {
 
     @Bean
     fun securityFilterChain(
@@ -25,8 +31,10 @@ class SecurityConfig {
         jwtAuthFilter: JwtAuthFilter,
         authEntryPoint: ApiResponseAuthenticationEntryPoint,
         accessDeniedHandler: ApiResponseAccessDeniedHandler,
+        corsConfigurationSource: CorsConfigurationSource,
     ): SecurityFilterChain {
         return http
+            .cors { it.configurationSource(corsConfigurationSource) }
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
@@ -45,6 +53,21 @@ class SecurityConfig {
             }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
             .build()
+    }
+
+    @Bean
+    fun corsConfigurationSource(): CorsConfigurationSource {
+        val config = CorsConfiguration().apply {
+            allowedOrigins = this@SecurityConfig.allowedOrigins.filter { it.isNotBlank() }
+            allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+            allowedHeaders = listOf("*")
+            exposedHeaders = listOf("Authorization")
+            allowCredentials = true
+            maxAge = 3600
+        }
+        return UrlBasedCorsConfigurationSource().apply {
+            registerCorsConfiguration("/**", config)
+        }
     }
 
     @Bean

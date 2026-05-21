@@ -16,3 +16,7 @@ logging:
     org.springframework.web: WARN
     org.springframework.security: WARN
     org.mongodb.driver: WARN
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
