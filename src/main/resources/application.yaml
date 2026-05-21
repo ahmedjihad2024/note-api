@@ -20,6 +20,25 @@ spring:
 jwt:
   secret: ${JWT_SECRET_BASE64}
 
+app:
+  rate-limit:
+    # Defaults are tuned for production: strict enough to stop brute-force,
+    # loose enough to never inconvenience a real user. The `dev` profile
+    # overrides these with much higher caps for local testing.
+    enabled: true
+    login:
+      capacity: 20
+      refill: PT1M
+    register:
+      capacity: 20
+      refill: PT1H
+    refresh:
+      capacity: 120
+      refill: PT1M
+    authenticated:
+      capacity: 300
+      refill: PT1M
+
 management:
   endpoints:
     web:

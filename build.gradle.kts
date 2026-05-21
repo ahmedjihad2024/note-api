@@ -75,6 +75,9 @@ dependencies {
 
 	// Spring Boot Actuator — exposes production-ready endpoints (health, info, metrics).
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+	// Bucket4j core — token-bucket rate limiting library (used by RateLimitFilter).
+	implementation("com.bucket4j:bucket4j-core:8.10.1")
 }
 
 kotlin {

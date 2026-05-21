@@ -18,3 +18,18 @@ app:
       - http://localhost:3000
       - http://localhost:5173
       - http://localhost:8080
+  rate-limit:
+    # Loose limits for local development — hammer the API without thinking.
+    # Production values live in application.yaml.
+    login:
+      capacity: 100
+      refill: PT1M
+    register:
+      capacity: 100
+      refill: PT1M
+    refresh:
+      capacity: 300
+      refill: PT1M
+    authenticated:
+      capacity: 1000
+      refill: PT1M

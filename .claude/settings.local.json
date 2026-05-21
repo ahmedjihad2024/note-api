@@ -6,7 +6,8 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(findstr /i \".gitignore\")",
-      "Bash(./gradlew compileKotlin -q)"
+      "Bash(./gradlew compileKotlin -q)",
+      "Bash(./gradlew dependencies *)"
     ]
   }
 }

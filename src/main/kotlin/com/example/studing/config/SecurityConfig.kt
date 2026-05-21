@@ -3,8 +3,11 @@ package com.example.studing.config
 import com.example.studing.security.ApiResponseAccessDeniedHandler
 import com.example.studing.security.ApiResponseAuthenticationEntryPoint
 import com.example.studing.security.jwt.JwtAuthFilter
+import com.example.studing.security.ratelimit.RateLimitFilter
+import com.example.studing.security.ratelimit.RateLimitProperties
 import jakarta.servlet.DispatcherType
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -21,6 +24,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableMethodSecurity
+@EnableConfigurationProperties(RateLimitProperties::class)
 class SecurityConfig(
     @Value($$"${app.cors.allowed-origins:}") private val allowedOrigins: List<String>,
 ) {
@@ -29,6 +33,7 @@ class SecurityConfig(
     fun securityFilterChain(
         http: HttpSecurity,
         jwtAuthFilter: JwtAuthFilter,
+        rateLimitFilter: RateLimitFilter,
         authEntryPoint: ApiResponseAuthenticationEntryPoint,
         accessDeniedHandler: ApiResponseAccessDeniedHandler,
         corsConfigurationSource: CorsConfigurationSource,
@@ -52,6 +57,7 @@ class SecurityConfig(
                     .accessDeniedHandler(accessDeniedHandler)
             }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
+            .addFilterAfter(rateLimitFilter, JwtAuthFilter::class.java)
             .build()
     }
 
@@ -75,5 +81,9 @@ class SecurityConfig(
 
     @Bean
     fun jwtAuthFilterRegistration(filter: JwtAuthFilter): FilterRegistrationBean<JwtAuthFilter> =
+        FilterRegistrationBean(filter).apply { isEnabled = false }
+
+    @Bean
+    fun rateLimitFilterRegistration(filter: RateLimitFilter): FilterRegistrationBean<RateLimitFilter> =
         FilterRegistrationBean(filter).apply { isEnabled = false }
 }
