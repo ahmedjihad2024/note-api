@@ -4,6 +4,8 @@ import com.example.studing.common.exception.ApiException
 import com.example.studing.note.dto.NoteRequest
 import com.example.studing.note.mapper.toEntity
 import org.bson.types.ObjectId
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -16,8 +18,8 @@ class NoteService(
     fun create(request: NoteRequest): Note =
         noteRepository.save(request.toEntity(currentUserId()))
 
-    fun listMine(): List<Note> =
-        noteRepository.findByOwnerId(currentUserId())
+    fun listMine(pageable: Pageable): Page<Note> =
+        noteRepository.findByOwnerId(currentUserId(), pageable)
 
     fun getOwned(noteId: ObjectId): Note {
         val note = noteRepository.findById(noteId).orElseThrow { ApiException.NotFound("Note") }
