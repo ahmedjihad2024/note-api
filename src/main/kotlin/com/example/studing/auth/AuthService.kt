@@ -40,7 +40,7 @@ class AuthService(
                 hashedPassword = passwordEncoder.encode(password),
             )
         )
-        val tokens = issueTokens(user.id)
+        val tokens = issueTokens(user)
         return AuthResponse(user.toResponse(), tokens.accessToken, tokens.refreshToken)
     }
 
@@ -52,7 +52,7 @@ class AuthService(
         if (!passwordEncoder.matches(password, stored)) {
             throw ApiException.Unauthorized("error.auth.invalid_password")
         }
-        val tokens = issueTokens(user.id)
+        val tokens = issueTokens(user)
         return AuthResponse(user.toResponse(), tokens.accessToken, tokens.refreshToken)
     }
 
@@ -68,7 +68,11 @@ class AuthService(
             ?: throw ApiException.Unauthorized("error.auth.refresh_token_revoked")
 
         refreshTokenRepository.delete(stored)
-        return issueTokens(userId)
+
+        val user = userRepository.findById(userId).orElseThrow {
+            ApiException.Unauthorized("error.auth.refresh_token_revoked")
+        }
+        return issueTokens(user)
     }
 
     fun logout(refreshToken: String, accessToken: String?) {
@@ -86,13 +90,13 @@ class AuthService(
         }
     }
 
-    private fun issueTokens(userId: ObjectId): TokenResponse {
-        val accessToken = jwtService.generateAccessToken(userId.toHexString())
-        val refreshToken = jwtService.generateRefreshToken(userId.toHexString())
+    private fun issueTokens(user: User): TokenResponse {
+        val accessToken = jwtService.generateAccessToken(user.id.toHexString(), user.roles)
+        val refreshToken = jwtService.generateRefreshToken(user.id.toHexString())
 
         refreshTokenRepository.save(
             RefreshToken(
-                userId = userId,
+                userId = user.id,
                 hashedToken = sha256(refreshToken),
                 expiresAt = Instant.now().plus(jwtService.refreshTokenValidityMs, ChronoUnit.MILLIS),
             )

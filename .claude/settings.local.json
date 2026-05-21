@@ -4,7 +4,9 @@
       "mcp__claude_ai_Context7__query-docs",
       "WebSearch",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(findstr /i \".gitignore\")",
+      "Bash(./gradlew compileKotlin -q)"
     ]
   }
 }

@@ -10,5 +10,6 @@ data class User(
     val name: String,
     @Indexed(unique = true) val email: String,
     val hashedPassword: String?,
+    val roles: Set<Role> = setOf(Role.USER),
     @Id val id: ObjectId = ObjectId()
 )

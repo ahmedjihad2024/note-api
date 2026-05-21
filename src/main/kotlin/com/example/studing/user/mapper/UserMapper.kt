@@ -7,4 +7,5 @@ fun User.toResponse(): UserResponse = UserResponse(
     id = id.toHexString(),
     name = name,
     email = email,
+    roles = roles.map { it.name }.toSet(),
 )
