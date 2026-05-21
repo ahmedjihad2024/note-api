@@ -31,7 +31,7 @@ class AuthService(
 
     fun register(name: String, email: String, password: String): AuthResponse {
         if (userRepository.findByEmail(email) != null) {
-            throw ApiException.Conflict("A user with that email already exists.")
+            throw ApiException.Conflict("error.auth.email_already_exists")
         }
         val user = userRepository.save(
             User(
@@ -46,11 +46,11 @@ class AuthService(
 
     fun login(email: String, password: String): AuthResponse {
         val user = userRepository.findByEmail(email)
-            ?: throw ApiException.Unauthorized("Invalid email.")
+            ?: throw ApiException.Unauthorized("error.auth.invalid_email")
         val stored = user.hashedPassword
-            ?: throw ApiException.Unauthorized("Invalid email.")
+            ?: throw ApiException.Unauthorized("error.auth.invalid_email")
         if (!passwordEncoder.matches(password, stored)) {
-            throw ApiException.Unauthorized("Invalid password.")
+            throw ApiException.Unauthorized("error.auth.invalid_password")
         }
         val tokens = issueTokens(user.id)
         return AuthResponse(user.toResponse(), tokens.accessToken, tokens.refreshToken)
@@ -59,13 +59,13 @@ class AuthService(
     @Transactional
     fun refresh(refreshToken: String): TokenResponse {
         if (!jwtService.validateRefreshToken(refreshToken)) {
-            throw ApiException.Unauthorized("Invalid refresh token.")
+            throw ApiException.Unauthorized("error.auth.invalid_refresh_token")
         }
         val userId = ObjectId(jwtService.getUserIdFromToken(refreshToken))
         val hashed = sha256(refreshToken)
 
         val stored = refreshTokenRepository.findByUserIdAndHashedToken(userId, hashed)
-            ?: throw ApiException.Unauthorized("Refresh token revoked or already used.")
+            ?: throw ApiException.Unauthorized("error.auth.refresh_token_revoked")
 
         refreshTokenRepository.delete(stored)
         return issueTokens(userId)

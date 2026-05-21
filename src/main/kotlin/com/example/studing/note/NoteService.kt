@@ -44,7 +44,7 @@ class NoteService(
 
     private fun currentUserId(): ObjectId {
         val principal = SecurityContextHolder.getContext().authentication?.principal as? String
-            ?: throw ApiException.Unauthorized("Missing authenticated user.")
+            ?: throw ApiException.Unauthorized("error.auth.missing_user")
         
         return ObjectId(principal)
     }

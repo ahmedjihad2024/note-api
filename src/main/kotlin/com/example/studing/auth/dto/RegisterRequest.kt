@@ -4,22 +4,21 @@ import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
-import org.springframework.data.mongodb.core.index.Indexed
 
 data class RegisterRequest(
-    @field:NotBlank(message = "Cannot be blank")
-    @field:Size(min = 2, max = 50, message = "Must be between 2 and 50 characters")
+    @field:NotBlank(message = "{validation.cannot_be_blank}")
+    @field:Size(min = 2, max = 50, message = "{validation.name.size}")
     val name: String,
 
-    @field:NotBlank(message = "Cannot be blank")
-    @field:Email(message = "Invalid format")
+    @field:NotBlank(message = "{validation.cannot_be_blank}")
+    @field:Email(message = "{validation.invalid_email}")
     val email: String,
 
-    @field:NotBlank(message = "Cannot be blank")
-    @field:Size(min = 8, max = 100, message = "Must be between 8 and 100 characters")
+    @field:NotBlank(message = "{validation.cannot_be_blank}")
+    @field:Size(min = 8, max = 100, message = "{validation.password.size}")
     @field:Pattern(
-        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+\\$",
-        message = "Must contain uppercase, lowercase, a digit, and a special character"
+        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).+\$",
+        message = "{validation.password.pattern}"
     )
     val password: String,
 )
