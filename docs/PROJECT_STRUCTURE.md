@@ -17,7 +17,7 @@ Group code by **business feature** (user, auth, order, course...) instead of by 
 ## Full Layout
 
 ```
-com.example.studing
+com.example.note
 │
 ├── StudingApplication.kt                    # @SpringBootApplication entry point
 │
@@ -181,7 +181,7 @@ Then in the controller: `fun register(@Valid @RequestBody body: RegisterRequest)
 
 ## Quick Checklist When Adding a New Feature
 
-1. Create the package: `com.example.studing.<feature>/`
+1. Create the package: `com.example.note.<feature>/`
 2. Add `<Feature>.kt` (entity), `<Feature>Repository.kt`
 3. Add `dto/` with request + response classes
 4. Add `<Feature>Service.kt` — all business logic

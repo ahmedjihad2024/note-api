@@ -1,1 +1,1 @@
-rootProject.name = "studing"
+rootProject.name = "note"

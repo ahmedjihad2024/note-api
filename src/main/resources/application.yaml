@@ -1,6 +1,6 @@
 spring:
   application:
-    name: studing
+    name: note
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   mongodb:

@@ -1,4 +1,4 @@
-# studing
+# note
 
 Kotlin + Spring Boot 4 backend with MongoDB Atlas.
 
