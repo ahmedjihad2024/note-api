@@ -13,3 +13,26 @@ spring:
 
 jwt:
   secret: ${JWT_SECRET_BASE64}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  health:
+    mongo:
+      enabled: false
+  info:
+    env:
+      enabled: true
+
+info:
+  app:
+    name: ${spring.application.name}
+    description: Notes API with JWT auth, i18n, and token revocation
+    version: 0.0.1-SNAPSHOT

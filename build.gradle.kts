@@ -25,9 +25,6 @@ dependencies {
 	// Blocking MongoDB integration via Spring Data: repositories, MongoTemplate, and document mapping.
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
-	// Non-blocking, reactive MongoDB driver + Spring Data Reactive (Flux/Mono) for async data access.
-	implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
-
 	// Spring Security core: authentication, authorization, filter chain, CSRF, and method security.
 	implementation("org.springframework.boot:spring-boot-starter-security")
 
@@ -75,6 +72,9 @@ dependencies {
 
 	// JJWT Jackson integration for (de)serializing JWT claims as JSON.
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
+
+	// Spring Boot Actuator — exposes production-ready endpoints (health, info, metrics).
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
 }
 
 kotlin {
