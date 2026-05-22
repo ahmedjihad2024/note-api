@@ -5,6 +5,7 @@ import com.example.note.auth.dto.LoginRequest
 import com.example.note.auth.dto.RefreshRequest
 import com.example.note.auth.dto.RegisterRequest
 import com.example.note.auth.dto.TokenResponse
+import com.example.note.auth.dto.VerifyEmailRequest
 import com.example.note.common.dto.ApiResponse
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -24,12 +25,16 @@ class AuthController(
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    fun register(@Valid @RequestBody body: RegisterRequest): ApiResponse<AuthResponse> =
+    fun register(@Valid @RequestBody body: RegisterRequest): ApiResponse<AuthResponse.VerificationRequired> =
         ApiResponse.ok(authService.register(body.name, body.email, body.password))
 
     @PostMapping("/login")
     fun login(@Valid @RequestBody body: LoginRequest): ApiResponse<AuthResponse> =
         ApiResponse.ok(authService.login(body.email, body.password))
+
+    @PostMapping("/verify-email")
+    fun verifyEmail(@Valid @RequestBody body: VerifyEmailRequest): ApiResponse<AuthResponse.Authenticated> =
+        ApiResponse.ok(authService.verifyEmail(body.email, body.code))
 
     @PostMapping("/refresh")
     fun refresh(@Valid @RequestBody body: RefreshRequest): ApiResponse<TokenResponse> =

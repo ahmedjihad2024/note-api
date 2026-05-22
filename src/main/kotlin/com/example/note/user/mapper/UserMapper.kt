@@ -8,4 +8,5 @@ fun User.toResponse(): UserResponse = UserResponse(
     name = name,
     email = email,
     roles = roles.map { it.name }.toSet(),
+    emailVerified = emailVerified,
 )

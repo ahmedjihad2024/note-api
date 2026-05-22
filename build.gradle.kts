@@ -86,6 +86,10 @@ dependencies {
 	// Micrometer Prometheus registry — turns the Actuator metrics into a
 	// /actuator/prometheus endpoint that Prometheus can scrape every ~15s.
 	runtimeOnly("io.micrometer:micrometer-registry-prometheus")
+
+	// Spring Boot Mail — JavaMailSender + auto-configuration. A LogMailer impl is
+	// used today for tests; swap to a SMTP-backed JavaMailSender impl when ready.
+	implementation("org.springframework.boot:spring-boot-starter-mail")
 }
 
 kotlin {

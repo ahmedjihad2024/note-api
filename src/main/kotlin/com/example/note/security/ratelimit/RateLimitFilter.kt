@@ -2,14 +2,13 @@ package com.example.note.security.ratelimit
 
 import com.example.note.common.dto.ApiResponse
 import com.example.note.common.exception.ErrorCode
+import com.example.note.common.extentions.tr
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.Bucket
 import io.github.bucket4j.Refill
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import org.springframework.context.MessageSource
-import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.http.MediaType
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
@@ -21,7 +20,6 @@ import java.util.concurrent.ConcurrentHashMap
 class RateLimitFilter(
     private val properties: RateLimitProperties,
     private val objectMapper: ObjectMapper,
-    private val messageSource: MessageSource,
 ) : OncePerRequestFilter() {
 
     /**
@@ -97,13 +95,7 @@ class RateLimitFilter(
         if (retryAfterSeconds > 0) {
             response.setHeader("Retry-After", retryAfterSeconds.toString())
         }
-        val message = messageSource.getMessage(
-            "error.rate_limit.exceeded",
-            null,
-            "Too many requests. Please try again later.",
-            LocaleContextHolder.getLocale(),
-        ) ?: "Too many requests. Please try again later."
-        val body = ApiResponse.fail(ErrorCode.RATE_LIMIT_EXCEEDED.code, message)
+        val body = ApiResponse.fail(ErrorCode.RATE_LIMIT_EXCEEDED.code, "error.rate_limit.exceeded".tr())
         objectMapper.writeValue(response.outputStream, body)
     }
 

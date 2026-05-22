@@ -5,7 +5,7 @@ sealed class ApiException(
     message: String,
 ) : RuntimeException(message) {
 
-    class NotFound(resource: String) : ApiException(ErrorCode.NOT_FOUND, "$resource not found.")
+    class NotFound(reason: String) : ApiException(ErrorCode.NOT_FOUND, reason)
     class Unauthorized(reason: String = "Unauthorized.") : ApiException(ErrorCode.UNAUTHORIZED, reason)
     class Forbidden(reason: String = "Forbidden.") : ApiException(ErrorCode.FORBIDDEN, reason)
     class Conflict(reason: String) : ApiException(ErrorCode.CONFLICT, reason)

@@ -5,6 +5,7 @@ import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
+import java.time.Instant
 
 @Document("users")
 data class User(
@@ -12,5 +13,7 @@ data class User(
     @Indexed(unique = true) val email: String,
     val hashedPassword: String?,
     val roles: Set<Role> = setOf(Role.USER),
+    val emailVerified: Boolean = false,
+    val emailVerifiedAt: Instant? = null,
     @Id val id: ObjectId = ObjectId()
 )

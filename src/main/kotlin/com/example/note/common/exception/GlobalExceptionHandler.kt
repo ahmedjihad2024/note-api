@@ -1,10 +1,8 @@
 package com.example.note.common.exception
 
 import com.example.note.common.dto.ApiResponse
+import com.example.note.common.extentions.tr
 import jakarta.validation.ConstraintViolationException
-import org.springframework.context.MessageSource
-import org.springframework.context.NoSuchMessageException
-import org.springframework.context.i18n.LocaleContextHolder
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -16,9 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
-class GlobalExceptionHandler(
-    private val messageSource: MessageSource,
-) {
+class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException::class)
     fun handleApi(ex: ApiException): ResponseEntity<ApiResponse<Nothing>> =
@@ -60,18 +56,9 @@ class GlobalExceptionHandler(
     @ExceptionHandler(Exception::class)
     fun handleAny(ex: Exception): ResponseEntity<ApiResponse<Nothing>> =
         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(ApiResponse.fail(ErrorCode.INTERNAL_ERROR.code, resolve(ex.message) ?: resolve("error.internal")!!))
+            .body(ApiResponse.fail(ErrorCode.INTERNAL_ERROR.code, ex.message?.takeIf { it.isNotBlank() }?.tr() ?: "error.internal".tr()))
 
     private fun respond(code: ErrorCode, message: String?): ResponseEntity<ApiResponse<Nothing>> =
         ResponseEntity.status(code.status)
-            .body(ApiResponse.fail(code.code, resolve(message) ?: code.code))
-
-    private fun resolve(message: String?): String? {
-        if (message.isNullOrBlank()) return null
-        return try {
-            messageSource.getMessage(message, null, LocaleContextHolder.getLocale())
-        } catch (_: NoSuchMessageException) {
-            message
-        }
-    }
+            .body(ApiResponse.fail(code.code, message?.takeIf { it.isNotBlank() }?.tr() ?: code.code))
 }
