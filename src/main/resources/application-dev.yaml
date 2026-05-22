@@ -1,19 +1,31 @@
+# Development profile: verbose logging, permissive CORS for local frontends,
+# detailed error responses, and loose rate limits so the API can be exercised
+# freely during local testing.
 server:
+  # Local dev port — avoids clashing with the prod default (8080).
   port: 8181
   error:
+    # Show stack traces only when ?trace=true is passed — handy for debugging.
     include-stacktrace: on_param
+    # Always include the exception message in error responses.
     include-message: always
 
 logging:
   level:
+    # Default level for everything not listed below.
     root: INFO
+    # App package — verbose so we see our own debug logs.
     com.example.studing: DEBUG
+    # Spring MVC internals — useful for tracing request handling.
     org.springframework.web: DEBUG
+    # Security filter chain — see auth/authz decisions as they happen.
     org.springframework.security: DEBUG
+    # Mongo driver is noisy at INFO; keep it quiet.
     org.mongodb.driver: WARN
 
 app:
   cors:
+    # Allow common local dev frontends (CRA, Vite, etc.) to call the API.
     allowed-origins:
       - http://localhost:3000
       - http://localhost:5173

@@ -1,41 +1,69 @@
+# Base configuration shared across all profiles.
+# Defines app identity, MongoDB, i18n messages, pagination, JWT, admin emails,
+# production-tuned rate limits, and Actuator endpoints. Profile-specific files
+# (application-dev.yaml, application-prod.yaml) override server, logging, CORS,
+# and rate-limit values.
 spring:
   application:
+    # Service name — shows up in logs, Actuator /info, and metrics.
     name: note
   profiles:
+    # Which profile to load. Defaults to `dev` when SPRING_PROFILES_ACTIVE is unset.
     active: ${SPRING_PROFILES_ACTIVE:dev}
   mongodb:
+    # MongoDB connection string, injected from the environment (never hard-coded).
     uri: ${MONGODB_CONNECTION_STRING}
+    # Disable automatic index creation at startup; indexes are managed explicitly.
     auto-index-creation: false
   messages:
+    # i18n message bundle base name (messages.properties, messages_ar.properties, ...).
     basename: messages
+    # Force UTF-8 so non-ASCII translations (Arabic, etc.) render correctly.
     encoding: UTF-8
+    # If a message key has no translation, return the key itself instead of throwing.
     use-code-as-default-message: true
   data:
     web:
       pageable:
+        # Default page size when the client doesn't pass `size`.
         default-page-size: 10
+        # Hard cap on page size to prevent clients from requesting huge pages.
         max-page-size: 100
+        # Page numbers are zero-indexed (?page=0 is the first page).
         one-indexed-parameters: false
 
 jwt:
+  # Base64-encoded HMAC secret used to sign/verify JWTs. Loaded from the env.
   secret: ${JWT_SECRET_BASE64}
 
+
 app:
+
+  admin:
+    # Emails that get the ADMIN role on registration/login.
+    emails: mood27358@gmail.com
+
   rate-limit:
     # Defaults are tuned for production: strict enough to stop brute-force,
     # loose enough to never inconvenience a real user. The `dev` profile
     # overrides these with much higher caps for local testing.
+    # Master switch for the rate-limit filter.
     enabled: true
     login:
+      # Max login attempts per refill window.
       capacity: 20
+      # Window during which the bucket fully refills (ISO-8601 duration).
       refill: PT1M
     register:
+      # Max account registrations per window (per IP).
       capacity: 20
       refill: PT1H
     refresh:
+      # Token-refresh calls per window — higher than login because clients refresh often.
       capacity: 120
       refill: PT1M
     authenticated:
+      # General per-user limit for authenticated endpoints.
       capacity: 300
       refill: PT1M
 
@@ -43,20 +71,26 @@ management:
   endpoints:
     web:
       exposure:
+        # Only expose /health and /info over HTTP; everything else stays internal.
         include: health, info
   endpoint:
     health:
+      # Hide detailed health info from anonymous callers; show it to authorized ones.
       show-details: when_authorized
+      # Enable Kubernetes-style liveness/readiness probes.
       probes:
         enabled: true
   health:
     mongo:
+      # Skip the default Mongo health indicator (we have our own checks).
       enabled: false
   info:
     env:
+      # Allow `info.*` properties below to surface in /actuator/info.
       enabled: true
 
 info:
+  # Metadata published at /actuator/info — useful for ops dashboards.
   app:
     name: ${spring.application.name}
     description: Notes API with JWT auth, i18n, and token revocation
