@@ -1,4 +1,4 @@
-package com.example.note.user
+package com.example.note.user.enums
 
 enum class Role {
     USER,

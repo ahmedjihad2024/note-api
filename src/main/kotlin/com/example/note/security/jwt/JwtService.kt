@@ -1,6 +1,6 @@
 package com.example.note.security.jwt
 
-import com.example.note.user.Role
+import com.example.note.user.enums.Role
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.security.Keys

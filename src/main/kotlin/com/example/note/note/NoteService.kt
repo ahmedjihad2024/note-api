@@ -19,7 +19,7 @@ class NoteService(
     fun create(request: NoteRequest): Note =
         noteRepository.save(request.toEntity(currentUserId()))
 
-    fun listMine(pageable: Pageable): Page<Note> =
+    fun getNotes(pageable: Pageable): Page<Note> =
         noteRepository.findByOwnerId(currentUserId(), pageable)
 
     fun getOwned(noteId: ObjectId): Note {

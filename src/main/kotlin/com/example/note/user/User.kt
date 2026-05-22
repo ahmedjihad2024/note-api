@@ -1,5 +1,6 @@
 package com.example.note.user
 
+import com.example.note.user.enums.Role
 import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed

@@ -34,11 +34,11 @@ class NoteController(
         ApiResponse.ok(noteService.create(body).toResponse())
 
     @GetMapping
-    fun listMine(
+    fun getNotes(
         @PageableDefault(size = 10, sort = ["createdAt"], direction = Sort.Direction.DESC)
         pageable: Pageable,
     ): ApiResponse<PageResponse<NoteResponse>> =
-        ApiResponse.ok(PageResponse.from(noteService.listMine(pageable)) { it.toResponse() })
+        ApiResponse.ok(PageResponse.from(noteService.getNotes(pageable)) { it.toResponse() })
 
     @GetMapping("/{id}")
     fun getById(@PathVariable id: ObjectId): ApiResponse<NoteResponse> =

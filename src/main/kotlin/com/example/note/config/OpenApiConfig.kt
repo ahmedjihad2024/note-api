@@ -5,8 +5,13 @@ import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.security.SecurityRequirement
 import io.swagger.v3.oas.models.security.SecurityScheme
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.event.EventListener
+import org.springframework.core.env.Environment
 
 // Wires the OpenAPI spec served by springdoc at /v3/api-docs (and the Swagger UI
 // at /swagger-ui.html). Declares a global "bearerAuth" JWT scheme so generated
@@ -19,7 +24,33 @@ import org.springframework.context.annotation.Configuration
 // before sending the request, otherwise the response body is rendered as plain
 // text instead of formatted JSON.
 @Configuration
-class OpenApiConfig {
+class OpenApiConfig(
+    private val environment: Environment,
+    @Value($$"${server.port:8080}") private val serverPort: String,
+    @Value($$"${server.servlet.context-path:}") private val contextPath: String,
+    @Value($$"${springdoc.swagger-ui.path:/swagger-ui.html}") private val swaggerUiPath: String,
+    @Value($$"${springdoc.api-docs.path:/v3/api-docs}") private val apiDocsPath: String,
+) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
+
+    @EventListener(ApplicationReadyEvent::class)
+    fun printApiLinks() {
+        val port = environment.getProperty("local.server.port") ?: serverPort
+        val base = "http://localhost:$port${contextPath.trimEnd('/')}"
+        val swaggerUrl = "$base$swaggerUiPath"
+        val apiDocsUrl = "$base$apiDocsPath"
+        log.info(
+            "\n" +
+                "================================================================\n" +
+                " API ready\n" +
+                "   Swagger UI : {}\n" +
+                "   Postman    : Import → Link → {}\n" +
+                "================================================================",
+            swaggerUrl,
+            apiDocsUrl,
+        )
+    }
 
     @Bean
     fun openAPI(): OpenAPI {
