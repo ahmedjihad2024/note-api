@@ -78,6 +78,10 @@ dependencies {
 
 	// Bucket4j core — token-bucket rate limiting library (used by RateLimitFilter).
 	implementation("com.bucket4j:bucket4j-core:8.10.1")
+
+	// Springdoc OpenAPI — auto-generates an OpenAPI 3 spec from controllers and serves Swagger UI.
+	// Exposes /v3/api-docs (JSON spec, importable into Postman) and /swagger-ui.html.
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
 }
 
 kotlin {

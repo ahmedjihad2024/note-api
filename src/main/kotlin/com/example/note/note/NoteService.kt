@@ -2,6 +2,7 @@ package com.example.note.note
 
 import com.example.note.common.exception.ApiException
 import com.example.note.note.dto.NoteRequest
+import com.example.note.note.dto.UpdateNoteRequest
 import com.example.note.note.mapper.toEntity
 import org.bson.types.ObjectId
 import org.springframework.data.domain.Page
@@ -27,12 +28,12 @@ class NoteService(
         return note
     }
 
-    fun update(noteId: ObjectId, request: NoteRequest): Note {
+    fun update(noteId: ObjectId, request: UpdateNoteRequest): Note {
         val existing = getOwned(noteId)
         return noteRepository.save(
             existing.copy(
-                title = request.title,
-                content = request.content,
+                title = request.title ?: existing.title,
+                content = request.content ?: existing.content,
                 color = request.color ?: existing.color,
                 updateAt = Instant.now(),
             )

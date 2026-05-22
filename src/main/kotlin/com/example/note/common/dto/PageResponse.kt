@@ -14,7 +14,10 @@ data class PageResponse<T>(
     companion object {
         fun <S : Any, T> from(page: Page<S>, mapper: (S) -> T): PageResponse<T> = PageResponse(
             items = page.content.map(mapper),
-            page = page.number,
+            // Spring's Page.number is always zero-based internally, but the API
+            // is configured with one-indexed-parameters=true. Shift by +1 so the
+            // response matches the page number the client sent.
+            page = page.number + 1,
             size = page.size,
             totalElements = page.totalElements,
             totalPages = page.totalPages,

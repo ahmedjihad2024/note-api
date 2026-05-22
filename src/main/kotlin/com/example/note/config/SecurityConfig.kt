@@ -44,7 +44,14 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
                 it
-                    .requestMatchers("/api/auth/**", "/actuator/health/**", "/actuator/info").permitAll()
+                    .requestMatchers(
+                        "/api/auth/**",
+                        "/actuator/health/**",
+                        "/actuator/info",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                    ).permitAll()
                     .dispatcherTypeMatchers(
                         DispatcherType.ERROR,
                         DispatcherType.FORWARD,

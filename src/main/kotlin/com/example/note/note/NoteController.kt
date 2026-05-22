@@ -4,6 +4,7 @@ import com.example.note.common.dto.ApiResponse
 import com.example.note.common.dto.PageResponse
 import com.example.note.note.dto.NoteRequest
 import com.example.note.note.dto.NoteResponse
+import com.example.note.note.dto.UpdateNoteRequest
 import com.example.note.note.mapper.toResponse
 import jakarta.validation.Valid
 import org.bson.types.ObjectId
@@ -46,7 +47,7 @@ class NoteController(
     @PutMapping("/{id}")
     fun updateNote(
         @PathVariable id: ObjectId,
-        @Valid @RequestBody body: NoteRequest,
+        @Valid @RequestBody body: UpdateNoteRequest,
     ): ApiResponse<NoteResponse> =
         ApiResponse.ok(noteService.update(id, body).toResponse())
 

@@ -29,8 +29,8 @@ spring:
         default-page-size: 10
         # Hard cap on page size to prevent clients from requesting huge pages.
         max-page-size: 100
-        # Page numbers are zero-indexed (?page=0 is the first page).
-        one-indexed-parameters: false
+        # Page numbers are one-indexed (?page=1 is the first page).
+        one-indexed-parameters: true
 
 jwt:
   # Base64-encoded HMAC secret used to sign/verify JWTs. Loaded from the env.
