@@ -1,0 +1,50 @@
+# Local-only observability stack: Prometheus scrapes the Spring app, Grafana
+# reads from Prometheus. Run with:  docker compose -f monitoring/docker-compose.yml up -d
+#
+# The Spring app is expected to run on the HOST (not in this compose), exposing
+# /actuator/prometheus at http://localhost:8181. Inside the containers, the host
+# is reachable as `host.docker.internal` (works on Docker Desktop for Windows/Mac).
+services:
+
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    container_name: note-prometheus
+    ports:
+      # Prometheus UI / API on http://localhost:9090
+      - "9090:9090"
+    volumes:
+      # Scrape config — see ./prometheus.yml for what gets scraped.
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # Persist the time-series DB on the host so data survives `docker compose down`.
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      # Drop data older than 15 days — keeps disk usage trivial for a hobby project.
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    container_name: note-grafana
+    ports:
+      # Grafana UI on http://localhost:3000 (login: admin / admin on first run).
+      - "3000:3000"
+    environment:
+      # Skip the "change password" prompt for local dev.
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      # Persist dashboards, users, and Grafana's own SQLite DB.
+      - grafana-data:/var/lib/grafana
+      # Pre-wire Prometheus as a data source so you don't click through the UI.
+      - ./grafana-datasource.yml:/etc/grafana/provisioning/datasources/prometheus.yml:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+  grafana-data:

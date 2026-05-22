@@ -71,8 +71,9 @@ management:
   endpoints:
     web:
       exposure:
-        # Only expose /health and /info over HTTP; everything else stays internal.
-        include: health, info
+        # Expose /health, /info, and /prometheus (the metrics scrape target).
+        # Everything else stays internal.
+        include: health, info, prometheus
   endpoint:
     health:
       # Hide detailed health info from anonymous callers; show it to authorized ones.
@@ -88,6 +89,16 @@ management:
     env:
       # Allow `info.*` properties below to surface in /actuator/info.
       enabled: true
+  metrics:
+    tags:
+      # Every metric is tagged with the app name so dashboards can filter when
+      # multiple services share the same Prometheus instance.
+      application: ${spring.application.name}
+    distribution:
+      # Emit histogram buckets for HTTP server timings so Prometheus/Grafana
+      # can compute true percentiles (p95, p99) instead of just averages.
+      percentiles-histogram:
+        http.server.requests: true
 
 info:
   # Metadata published at /actuator/info — useful for ops dashboards.

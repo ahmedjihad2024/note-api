@@ -15,7 +15,7 @@ logging:
     # Default level for everything not listed below.
     root: INFO
     # App package — verbose so we see our own debug logs.
-    com.example.studing: DEBUG
+    com.example.note: DEBUG
     # Spring MVC internals — useful for tracing request handling.
     org.springframework.web: DEBUG
     # Security filter chain — see auth/authz decisions as they happen.

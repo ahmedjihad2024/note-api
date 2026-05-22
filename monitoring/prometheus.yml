@@ -1,0 +1,22 @@
+# Prometheus scrape config. Loaded by the prometheus container in docker-compose.yml.
+global:
+  # How often to scrape every target listed below.
+  scrape_interval: 15s
+  # External label attached to every metric — handy if you ever federate this
+  # instance into a larger Prometheus.
+  external_labels:
+    monitor: note-local
+
+scrape_configs:
+
+  # Prometheus scraping itself — useful sanity check ("is Prometheus alive?").
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # The Spring Boot app running on the host machine. `host.docker.internal`
+  # resolves to the host's IP from inside Docker Desktop (Windows/Mac).
+  - job_name: note-app
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ["host.docker.internal:8181"]

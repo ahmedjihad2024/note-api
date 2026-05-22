@@ -24,7 +24,7 @@ logging:
     # Keep prod logs quiet; only warnings/errors by default.
     root: WARN
     # App package logs at INFO so we still see business events.
-    com.example.studing: INFO
+    com.example.note: INFO
     org.springframework.web: WARN
     org.springframework.security: WARN
     org.mongodb.driver: WARN
@@ -33,3 +33,13 @@ app:
   cors:
     # Comma-separated list of allowed origins, injected at deploy time.
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+
+
+# Turn off Swagger UI and the raw OpenAPI spec in production — they expose the
+# full API surface (endpoints, payload schemas, validation rules) and are meant
+# for development only. Both stay enabled in the dev profile.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

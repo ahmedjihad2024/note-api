@@ -82,6 +82,10 @@ dependencies {
 	// Springdoc OpenAPI — auto-generates an OpenAPI 3 spec from controllers and serves Swagger UI.
 	// Exposes /v3/api-docs (JSON spec, importable into Postman) and /swagger-ui.html.
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3")
+
+	// Micrometer Prometheus registry — turns the Actuator metrics into a
+	// /actuator/prometheus endpoint that Prometheus can scrape every ~15s.
+	runtimeOnly("io.micrometer:micrometer-registry-prometheus")
 }
 
 kotlin {
