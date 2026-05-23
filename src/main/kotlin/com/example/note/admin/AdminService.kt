@@ -2,8 +2,8 @@ package com.example.note.admin
 
 import com.example.note.common.exception.ApiException
 import com.example.note.user.enums.Role
-import com.example.note.user.User
-import com.example.note.user.UserRepository
+import com.example.note.user.entities.User
+import com.example.note.user.repository.UserRepository
 import org.bson.types.ObjectId
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable

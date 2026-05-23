@@ -1,31 +1,106 @@
 package com.example.note.user
 
+import com.example.note.auth.AuthService
+import com.example.note.auth.dto.AuthResponse
+import com.example.note.auth.mail.Mailer
+import com.example.note.auth.mail.STATIC_VERIFICATION_CODE
+import com.example.note.auth.mail.VERIFICATION_CODE_TTL_MINUTES
 import com.example.note.common.exception.ApiException
-import jakarta.validation.constraints.Email
+import com.example.note.common.extentions.tr
+import com.example.note.user.entities.EmailChangeRequest
+import com.example.note.user.entities.User
+import com.example.note.user.repository.EmailChangeRequestRepository
+import com.example.note.user.repository.UserRepository
 import org.bson.types.ObjectId
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 @Service
 class UserService(
     private val userRepository: UserRepository,
+    private val emailChangeRequestRepository: EmailChangeRequestRepository,
     private val passwordEncoder: PasswordEncoder,
+    private val authService: AuthService,
+    private val mailer: Mailer,
 ) {
     fun me(id: String): User {
         return userRepository.findById(ObjectId(id))
-            .orElseGet { throw ApiException.NotFound("error.user.not_found") }
+            .orElseThrow { ApiException.NotFound("error.user.not_found") }
     }
 
     @Transactional
-    fun updateUser(id: String, name: String?, email: String?, password: String?): User {
-        var user = userRepository.findById(ObjectId(id))
+    fun updateName(id: String, name: String?): User {
+        val user = userRepository.findById(ObjectId(id))
             .orElseThrow { ApiException.NotFound("error.user.not_found") }
-        user = user.copy(
-            name = name ?: user.name,
-            email = email ?: user.email,
-            password?.let { passwordEncoder.encode(it) } ?: user.hashedPassword
+        if (name == null) return user
+        return userRepository.save(user.copy(name = name))
+    }
+
+    @Transactional
+    fun changePassword(id: String, currentPassword: String, newPassword: String): AuthResponse.Authenticated {
+        val user = userRepository.findById(ObjectId(id))
+            .orElseThrow { ApiException.NotFound("error.user.not_found") }
+        val stored = user.hashedPassword
+            ?: throw ApiException.BadRequest("error.user.invalid_current_password")
+        if (!passwordEncoder.matches(currentPassword, stored)) {
+            throw ApiException.BadRequest("error.user.invalid_current_password")
+        }
+        val updated = userRepository.save(
+            user.copy(hashedPassword = passwordEncoder.encode(newPassword)),
         )
-        return userRepository.save(user)
+        return authService.reissueAfterPasswordChange(updated)
+    }
+
+    @Transactional
+    fun changeEmail(id: String, newEmail: String): AuthResponse.VerificationRequired {
+        val user = userRepository.findById(ObjectId(id))
+            .orElseThrow { ApiException.NotFound("error.user.not_found") }
+        if (newEmail == user.email) {
+            throw ApiException.BadRequest("error.user.email_same_as_current")
+        }
+        val taken = userRepository.findByEmail(newEmail)
+        if (taken != null && taken.id != user.id) {
+            throw ApiException.Conflict("error.auth.email_already_exists")
+        }
+        emailChangeRequestRepository.deleteByUserId(user.id)
+        emailChangeRequestRepository.save(
+            EmailChangeRequest(
+                userId = user.id,
+                newEmail = newEmail,
+                code = STATIC_VERIFICATION_CODE,
+                expiresAt = Instant.now().plus(VERIFICATION_CODE_TTL_MINUTES, ChronoUnit.MINUTES),
+            ),
+        )
+        mailer.sendVerificationCode(newEmail, STATIC_VERIFICATION_CODE)
+        return AuthResponse.VerificationRequired(
+            email = newEmail,
+            message = "error.user.email_change_code_sent".tr(),
+        )
+    }
+
+    @Transactional
+    fun verifyChangeEmailCode(id: String, code: String): User {
+        val user = userRepository.findById(ObjectId(id))
+            .orElseThrow { ApiException.NotFound("error.user.not_found") }
+        val pending = emailChangeRequestRepository.findByUserId(user.id)
+            ?: throw ApiException.BadRequest("error.user.no_pending_email_change")
+        if (pending.expiresAt.isBefore(Instant.now())) {
+            emailChangeRequestRepository.delete(pending)
+            throw ApiException.BadRequest("error.user.email_change_code_expired")
+        }
+        if (pending.code != code) {
+            throw ApiException.BadRequest("error.user.email_change_code_invalid")
+        }
+        val taken = userRepository.findByEmail(pending.newEmail)
+        if (taken != null && taken.id != user.id) {
+            emailChangeRequestRepository.delete(pending)
+            throw ApiException.Conflict("error.auth.email_already_exists")
+        }
+        val updated = userRepository.save(user.copy(email = pending.newEmail))
+        emailChangeRequestRepository.delete(pending)
+        return updated
     }
 }

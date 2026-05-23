@@ -1,6 +1,6 @@
 package com.example.note.user.mapper
 
-import com.example.note.user.User
+import com.example.note.user.entities.User
 import com.example.note.user.dto.UserResponse
 
 fun User.toResponse(): UserResponse = UserResponse(

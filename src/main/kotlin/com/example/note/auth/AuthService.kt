@@ -3,17 +3,21 @@ package com.example.note.auth
 import com.example.note.auth.dto.AuthResponse
 import com.example.note.auth.dto.TokenResponse
 import com.example.note.auth.entities.EmailVerificationCode
+import com.example.note.auth.passwordReset.PasswordResetCode
 import com.example.note.auth.entities.RefreshToken
 import com.example.note.auth.entities.RevokedAccessToken
 import com.example.note.auth.mail.Mailer
+import com.example.note.auth.mail.STATIC_VERIFICATION_CODE
+import com.example.note.auth.mail.VERIFICATION_CODE_TTL_MINUTES
 import com.example.note.auth.repository.EmailVerificationCodeRepository
+import com.example.note.auth.passwordReset.PasswordResetCodeRepository
 import com.example.note.auth.repository.RefreshTokenRepository
 import com.example.note.auth.repository.RevokedAccessTokenRepository
 import com.example.note.common.exception.ApiException
 import com.example.note.common.extentions.tr
 import com.example.note.security.jwt.JwtService
-import com.example.note.user.User
-import com.example.note.user.UserRepository
+import com.example.note.user.entities.User
+import com.example.note.user.repository.UserRepository
 import com.example.note.user.mapper.toResponse
 import org.bson.types.ObjectId
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -30,6 +34,7 @@ class AuthService(
     private val refreshTokenRepository: RefreshTokenRepository,
     private val revokedAccessTokenRepository: RevokedAccessTokenRepository,
     private val emailVerificationCodeRepository: EmailVerificationCodeRepository,
+    private val passwordResetCodeRepository: PasswordResetCodeRepository,
     private val jwtService: JwtService,
     private val passwordEncoder: PasswordEncoder,
     private val mailer: Mailer,
@@ -137,6 +142,65 @@ class AuthService(
         }
     }
 
+    @Transactional
+    fun forgotPassword(email: String): AuthResponse.VerificationRequired {
+        val user = userRepository.findByEmail(email)
+        if (user != null) {
+            passwordResetCodeRepository.deleteByUserId(user.id)
+            val record = PasswordResetCode(
+                userId = user.id,
+                code = STATIC_VERIFICATION_CODE,
+                expiresAt = Instant.now().plus(VERIFICATION_CODE_TTL_MINUTES, ChronoUnit.MINUTES),
+            )
+            passwordResetCodeRepository.save(record)
+            mailer.sendVerificationCode(user.email, record.code)
+        }
+        return AuthResponse.VerificationRequired(
+            email = email,
+            message = "error.auth.password_reset_code_sent".tr(),
+        )
+    }
+
+    fun verifyResetCode(email: String, code: String) {
+        val user = userRepository.findByEmail(email)
+            ?: throw ApiException.BadRequest("error.auth.password_reset_code_invalid")
+        val stored = passwordResetCodeRepository.findByUserId(user.id)
+            ?: throw ApiException.BadRequest("error.auth.password_reset_code_invalid")
+        if (stored.expiresAt.isBefore(Instant.now())) {
+            throw ApiException.BadRequest("error.auth.password_reset_code_expired")
+        }
+        if (stored.code != code) {
+            throw ApiException.BadRequest("error.auth.password_reset_code_invalid")
+        }
+    }
+
+    @Transactional
+    fun resetPassword(email: String, code: String, newPassword: String): AuthResponse.Authenticated {
+        val user = userRepository.findByEmail(email)
+            ?: throw ApiException.BadRequest("error.auth.password_reset_code_invalid")
+        val stored = passwordResetCodeRepository.findByUserId(user.id)
+            ?: throw ApiException.BadRequest("error.auth.password_reset_code_invalid")
+        if (stored.expiresAt.isBefore(Instant.now())) {
+            passwordResetCodeRepository.delete(stored)
+            throw ApiException.BadRequest("error.auth.password_reset_code_expired")
+        }
+        if (stored.code != code) {
+            throw ApiException.BadRequest("error.auth.password_reset_code_invalid")
+        }
+        val updated = userRepository.save(
+            user.copy(hashedPassword = passwordEncoder.encode(newPassword)),
+        )
+        passwordResetCodeRepository.delete(stored)
+        return reissueAfterPasswordChange(updated)
+    }
+
+    @Transactional
+    fun reissueAfterPasswordChange(user: User): AuthResponse.Authenticated {
+        refreshTokenRepository.deleteAllByUserId(user.id)
+        val tokens = issueTokens(user)
+        return AuthResponse.Authenticated(user.toResponse(), tokens.accessToken, tokens.refreshToken)
+    }
+
     private fun issueAndSendVerificationCode(user: User) {
         emailVerificationCodeRepository.deleteByUserId(user.id)
         val record = EmailVerificationCode(
@@ -165,10 +229,5 @@ class AuthService(
     private fun sha256(value: String): String {
         val digest = MessageDigest.getInstance("SHA-256").digest(value.toByteArray())
         return Base64.getEncoder().encodeToString(digest)
-    }
-
-    companion object {
-        private const val STATIC_VERIFICATION_CODE = "12345"
-        private const val VERIFICATION_CODE_TTL_MINUTES = 15L
     }
 }

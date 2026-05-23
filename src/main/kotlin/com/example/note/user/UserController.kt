@@ -2,12 +2,16 @@ package com.example.note.user
 
 import com.example.note.auth.dto.AuthResponse
 import com.example.note.common.dto.ApiResponse
+import com.example.note.user.dto.ChangeEmailRequest
+import com.example.note.user.dto.ChangePasswordRequest
+import com.example.note.user.dto.ConfirmEmailChangeRequest
 import com.example.note.user.dto.UpdateRequest
 import com.example.note.user.dto.UserResponse
 import com.example.note.user.mapper.toResponse
 import jakarta.validation.Valid
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -16,22 +20,42 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/user")
 class UserController(
-    private val userService: UserService
+    private val userService: UserService,
 ) {
     @GetMapping("/me")
     fun me(
-        @AuthenticationPrincipal currentUserId: String
+        @AuthenticationPrincipal currentUserId: String,
     ): ApiResponse<UserResponse> = ApiResponse.ok(userService.me(currentUserId).toResponse())
 
-    @PostMapping
-    fun updateUser(
+    @PatchMapping("/me")
+    fun updateName(
         @Valid @RequestBody body: UpdateRequest,
-        @AuthenticationPrincipal currentUserId: String
-    ): ApiResponse<UserResponse> = ApiResponse.ok(userService.updateUser(
-            currentUserId,
-            body.name,
-            body.email,
-            body.password
-        ).toResponse())
+        @AuthenticationPrincipal currentUserId: String,
+    ): ApiResponse<UserResponse> = ApiResponse.ok(
+        userService.updateName(currentUserId, body.name).toResponse(),
+    )
 
+    @PostMapping("/me/change-password")
+    fun changePassword(
+        @Valid @RequestBody body: ChangePasswordRequest,
+        @AuthenticationPrincipal currentUserId: String,
+    ): ApiResponse<AuthResponse.Authenticated> = ApiResponse.ok(
+        userService.changePassword(currentUserId, body.currentPassword, body.newPassword),
+    )
+
+    @PostMapping("/me/change-email/request")
+    fun changeEmail(
+        @Valid @RequestBody body: ChangeEmailRequest,
+        @AuthenticationPrincipal currentUserId: String,
+    ): ApiResponse<AuthResponse.VerificationRequired> = ApiResponse.ok(
+        userService.changeEmail(currentUserId, body.newEmail),
+    )
+
+    @PostMapping("/me/change-email/verify")
+    fun verifyChangeEmailCode(
+        @Valid @RequestBody body: ConfirmEmailChangeRequest,
+        @AuthenticationPrincipal currentUserId: String,
+    ): ApiResponse<UserResponse> = ApiResponse.ok(
+        userService.verifyChangeEmailCode(currentUserId, body.code).toResponse(),
+    )
 }

@@ -2,6 +2,7 @@ package com.example.note.note
 
 import org.bson.types.ObjectId
 import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import java.time.Instant
 
@@ -12,6 +13,6 @@ data class Note(
     val color: Long,
     val createdAt: Instant,
     val updateAt: Instant? = null,
-    val ownerId: ObjectId,
+    @Indexed val ownerId: ObjectId,
     @Id val id: ObjectId = ObjectId.get()
 )

@@ -1,4 +1,4 @@
-package com.example.note.user
+package com.example.note.user.entities
 
 import com.example.note.user.enums.Role
 import org.bson.types.ObjectId

@@ -1,7 +1,7 @@
 package com.example.note.admin
 
 import com.example.note.user.enums.Role
-import com.example.note.user.UserRepository
+import com.example.note.user.repository.UserRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.ApplicationArguments
