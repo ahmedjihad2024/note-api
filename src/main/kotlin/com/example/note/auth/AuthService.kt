@@ -7,13 +7,14 @@ import com.example.note.auth.passwordReset.PasswordResetCode
 import com.example.note.auth.entities.RefreshToken
 import com.example.note.auth.entities.RevokedAccessToken
 import com.example.note.auth.mail.Mailer
-import com.example.note.auth.mail.STATIC_VERIFICATION_CODE
 import com.example.note.auth.mail.VERIFICATION_CODE_TTL_MINUTES
+import com.example.note.auth.mail.generateVerificationCode
 import com.example.note.auth.repository.EmailVerificationCodeRepository
 import com.example.note.auth.passwordReset.PasswordResetCodeRepository
 import com.example.note.auth.repository.RefreshTokenRepository
 import com.example.note.auth.repository.RevokedAccessTokenRepository
 import com.example.note.common.exception.ApiException
+import com.example.note.common.extentions.sha256
 import com.example.note.common.extentions.tr
 import com.example.note.security.jwt.JwtService
 import com.example.note.user.entities.User
@@ -23,10 +24,8 @@ import org.bson.types.ObjectId
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.security.MessageDigest
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import java.util.Base64
 
 @Service
 class AuthService(
@@ -97,7 +96,7 @@ class AuthService(
             emailVerificationCodeRepository.delete(stored)
             throw ApiException.BadRequest("error.auth.verification_code_expired")
         }
-        if (stored.code != code) {
+        if (stored.code != code.sha256()) {
             throw ApiException.BadRequest("error.auth.verification_code_invalid")
         }
         emailVerificationCodeRepository.delete(stored)
@@ -114,7 +113,7 @@ class AuthService(
             throw ApiException.Unauthorized("error.auth.invalid_refresh_token")
         }
         val userId = ObjectId(jwtService.getUserIdFromToken(refreshToken))
-        val hashed = sha256(refreshToken)
+        val hashed = refreshToken.sha256()
 
         val stored = refreshTokenRepository.findByUserIdAndHashedToken(userId, hashed)
             ?: throw ApiException.Unauthorized("error.auth.refresh_token_revoked")
@@ -130,7 +129,7 @@ class AuthService(
     fun logout(refreshToken: String, accessToken: String?) {
         if (jwtService.validateRefreshToken(refreshToken)) {
             val userId = ObjectId(jwtService.getUserIdFromToken(refreshToken))
-            refreshTokenRepository.deleteByUserIdAndHashedToken(userId, sha256(refreshToken))
+            refreshTokenRepository.deleteByUserIdAndHashedToken(userId, refreshToken.sha256())
         }
         if (accessToken != null && jwtService.validateAccessToken(accessToken)) {
             revokedAccessTokenRepository.save(
@@ -147,13 +146,15 @@ class AuthService(
         val user = userRepository.findByEmail(email)
         if (user != null) {
             passwordResetCodeRepository.deleteByUserId(user.id)
-            val record = PasswordResetCode(
-                userId = user.id,
-                code = STATIC_VERIFICATION_CODE,
-                expiresAt = Instant.now().plus(VERIFICATION_CODE_TTL_MINUTES, ChronoUnit.MINUTES),
+            val plain = generateVerificationCode()
+            passwordResetCodeRepository.save(
+                PasswordResetCode(
+                    userId = user.id,
+                    code = plain.sha256(),
+                    expiresAt = Instant.now().plus(VERIFICATION_CODE_TTL_MINUTES, ChronoUnit.MINUTES),
+                )
             )
-            passwordResetCodeRepository.save(record)
-            mailer.sendVerificationCode(user.email, record.code)
+            mailer.sendVerificationCode(user.email, plain)
         }
         return AuthResponse.VerificationRequired(
             email = email,
@@ -169,7 +170,7 @@ class AuthService(
         if (stored.expiresAt.isBefore(Instant.now())) {
             throw ApiException.BadRequest("error.auth.password_reset_code_expired")
         }
-        if (stored.code != code) {
+        if (stored.code != code.sha256()) {
             throw ApiException.BadRequest("error.auth.password_reset_code_invalid")
         }
     }
@@ -184,7 +185,7 @@ class AuthService(
             passwordResetCodeRepository.delete(stored)
             throw ApiException.BadRequest("error.auth.password_reset_code_expired")
         }
-        if (stored.code != code) {
+        if (stored.code != code.sha256()) {
             throw ApiException.BadRequest("error.auth.password_reset_code_invalid")
         }
         val updated = userRepository.save(
@@ -203,13 +204,15 @@ class AuthService(
 
     private fun issueAndSendVerificationCode(user: User) {
         emailVerificationCodeRepository.deleteByUserId(user.id)
-        val record = EmailVerificationCode(
-            userId = user.id,
-            code = STATIC_VERIFICATION_CODE,
-            expiresAt = Instant.now().plus(VERIFICATION_CODE_TTL_MINUTES, ChronoUnit.MINUTES),
+        val plain = generateVerificationCode()
+        emailVerificationCodeRepository.save(
+            EmailVerificationCode(
+                userId = user.id,
+                code = plain.sha256(),
+                expiresAt = Instant.now().plus(VERIFICATION_CODE_TTL_MINUTES, ChronoUnit.MINUTES),
+            )
         )
-        emailVerificationCodeRepository.save(record)
-        mailer.sendVerificationCode(user.email, record.code)
+        mailer.sendVerificationCode(user.email, plain)
     }
 
     private fun issueTokens(user: User): TokenResponse {
@@ -219,15 +222,11 @@ class AuthService(
         refreshTokenRepository.save(
             RefreshToken(
                 userId = user.id,
-                hashedToken = sha256(refreshToken),
+                hashedToken = refreshToken.sha256(),
                 expiresAt = Instant.now().plus(jwtService.refreshTokenValidityMs, ChronoUnit.MILLIS),
             )
         )
         return TokenResponse(accessToken, refreshToken)
     }
 
-    private fun sha256(value: String): String {
-        val digest = MessageDigest.getInstance("SHA-256").digest(value.toByteArray())
-        return Base64.getEncoder().encodeToString(digest)
-    }
 }

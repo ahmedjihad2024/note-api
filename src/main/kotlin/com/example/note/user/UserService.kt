@@ -3,8 +3,9 @@ package com.example.note.user
 import com.example.note.auth.AuthService
 import com.example.note.auth.dto.AuthResponse
 import com.example.note.auth.mail.Mailer
-import com.example.note.auth.mail.STATIC_VERIFICATION_CODE
 import com.example.note.auth.mail.VERIFICATION_CODE_TTL_MINUTES
+import com.example.note.auth.mail.generateVerificationCode
+import com.example.note.common.extentions.sha256
 import com.example.note.common.exception.ApiException
 import com.example.note.common.extentions.tr
 import com.example.note.user.entities.EmailChangeRequest
@@ -66,15 +67,16 @@ class UserService(
             throw ApiException.Conflict("error.auth.email_already_exists")
         }
         emailChangeRequestRepository.deleteByUserId(user.id)
+        val plain = generateVerificationCode()
         emailChangeRequestRepository.save(
             EmailChangeRequest(
                 userId = user.id,
                 newEmail = newEmail,
-                code = STATIC_VERIFICATION_CODE,
+                code = plain.sha256(),
                 expiresAt = Instant.now().plus(VERIFICATION_CODE_TTL_MINUTES, ChronoUnit.MINUTES),
             ),
         )
-        mailer.sendVerificationCode(newEmail, STATIC_VERIFICATION_CODE)
+        mailer.sendVerificationCode(newEmail, plain)
         return AuthResponse.VerificationRequired(
             email = newEmail,
             message = "error.user.email_change_code_sent".tr(),
@@ -91,7 +93,7 @@ class UserService(
             emailChangeRequestRepository.delete(pending)
             throw ApiException.BadRequest("error.user.email_change_code_expired")
         }
-        if (pending.code != code) {
+        if (pending.code != code.sha256()) {
             throw ApiException.BadRequest("error.user.email_change_code_invalid")
         }
         val taken = userRepository.findByEmail(pending.newEmail)

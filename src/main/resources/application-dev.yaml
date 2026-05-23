@@ -26,10 +26,7 @@ logging:
 app:
   cors:
     # Allow common local dev frontends (CRA, Vite, etc.) to call the API.
-    allowed-origins:
-      - http://localhost:3000
-      - http://localhost:5173
-      - http://localhost:8080
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
   rate-limit:
     # Loose limits for local development — hammer the API without thinking.
     # Production values live in application.yaml.
