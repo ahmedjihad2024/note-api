@@ -21,6 +21,8 @@ repositories {
 dependencies {
 	// Builds REST APIs over Spring MVC with embedded Tomcat, Jackson JSON, and servlet support.
 	implementation("org.springframework.boot:spring-boot-starter-web")
+	
+//	implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive") // reactive
 
 	// Blocking MongoDB integration via Spring Data: repositories, MongoTemplate, and document mapping.
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
@@ -57,6 +59,14 @@ dependencies {
 
 	// Spring Security test helpers — `@WithMockUser`, security-aware MockMvc/WebTestClient mutators.
 	testImplementation("org.springframework.security:spring-security-test")
+
+	// MockK — Kotlin-native mocking library (mocks final classes/data classes, relaxed mocks,
+	// expressive every/verify DSL). Used for fast, isolated service unit tests.
+	testImplementation("io.mockk:mockk:1.13.13")
+
+	// Flapdoodle embedded MongoDB (Spring Boot 4.x module) — boots an in-memory mongod for
+	// @SpringBootTest so the full application context loads without a real database or Docker.
+	testImplementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo.spring4x:4.24.0")
 
 	// JUnit Platform launcher required at test runtime by newer Gradle/Surefire versions.
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")

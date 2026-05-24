@@ -1,0 +1,26 @@
+# Test profile: makes @SpringBootTest boot against an in-memory MongoDB (Flapdoodle)
+# instead of the env-driven real database, and supplies the otherwise-required secrets
+# so the context can load with no external dependencies.
+spring:
+  mongodb:
+    # Concrete value just satisfies placeholder resolution; the Flapdoodle
+    # auto-configuration replaces the MongoClient with one bound to embedded mongod.
+    uri: mongodb://localhost/test
+
+jwt:
+  # Throwaway 256-bit Base64 HMAC key — test-only, never used for real tokens.
+  secret: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
+app:
+  # Log mailer: verification codes are written to the log, no SMTP needed.
+  mailer: log
+  admin:
+    # No admin bootstrapping during tests.
+    emails: ""
+
+de:
+  flapdoodle:
+    mongodb:
+      embedded:
+        # MongoDB version Flapdoodle downloads/caches and starts in-memory.
+        version: 7.0.4
