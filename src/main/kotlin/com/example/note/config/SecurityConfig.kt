@@ -46,6 +46,7 @@ class SecurityConfig(
                 it
                     .requestMatchers(
                         "/api/auth/**",
+                        "/avatars/**",
                         "/actuator/health/**",
                         "/actuator/info",
                         "/actuator/prometheus",

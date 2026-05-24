@@ -8,7 +8,7 @@ import com.example.note.auth.entities.RefreshToken
 import com.example.note.auth.entities.RevokedAccessToken
 import com.example.note.auth.mail.Mailer
 import com.example.note.auth.mail.VERIFICATION_CODE_TTL_MINUTES
-import com.example.note.auth.mail.generateVerificationCode
+import com.example.note.auth.mail.VerificationCodeGenerator
 import com.example.note.auth.repository.EmailVerificationCodeRepository
 import com.example.note.auth.passwordReset.PasswordResetCodeRepository
 import com.example.note.auth.repository.RefreshTokenRepository
@@ -37,6 +37,7 @@ class AuthService(
     private val jwtService: JwtService,
     private val passwordEncoder: PasswordEncoder,
     private val mailer: Mailer,
+    private val verificationCodeGenerator: VerificationCodeGenerator,
 ) {
 
     @Transactional
@@ -146,7 +147,7 @@ class AuthService(
         val user = userRepository.findByEmail(email)
         if (user != null) {
             passwordResetCodeRepository.deleteByUserId(user.id)
-            val plain = generateVerificationCode()
+            val plain = verificationCodeGenerator.generate()
             passwordResetCodeRepository.save(
                 PasswordResetCode(
                     userId = user.id,
@@ -204,7 +205,7 @@ class AuthService(
 
     private fun issueAndSendVerificationCode(user: User) {
         emailVerificationCodeRepository.deleteByUserId(user.id)
-        val plain = generateVerificationCode()
+        val plain = verificationCodeGenerator.generate()
         emailVerificationCodeRepository.save(
             EmailVerificationCode(
                 userId = user.id,

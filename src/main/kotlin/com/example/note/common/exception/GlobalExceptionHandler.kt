@@ -12,6 +12,7 @@ import org.springframework.security.core.AuthenticationException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.multipart.MaxUploadSizeExceededException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -48,6 +49,10 @@ class GlobalExceptionHandler {
         val msg = ex.constraintViolations.joinToString { "${it.propertyPath}: ${it.message}" }
         return respond(ErrorCode.VALIDATION_ERROR, msg)
     }
+
+    @ExceptionHandler(MaxUploadSizeExceededException::class)
+    fun handleUploadTooLarge(ex: MaxUploadSizeExceededException): ResponseEntity<ApiResponse<Nothing>> =
+        respond(ErrorCode.BAD_REQUEST, "error.user.avatar_too_large")
 
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleIllegalArg(ex: IllegalArgumentException): ResponseEntity<ApiResponse<Nothing>> =

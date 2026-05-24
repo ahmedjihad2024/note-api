@@ -15,5 +15,7 @@ data class User(
     val roles: Set<Role> = setOf(Role.USER),
     val emailVerified: Boolean = false,
     val emailVerifiedAt: Instant? = null,
+    // On-disk filename of the profile picture (e.g. "<uuid>.png"); null when the user has no avatar.
+    val avatarFilename: String? = null,
     @Id val id: ObjectId = ObjectId()
 )

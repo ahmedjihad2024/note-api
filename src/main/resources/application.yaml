@@ -10,6 +10,12 @@ spring:
   profiles:
     # Which profile to load. Defaults to `dev` when SPRING_PROFILES_ACTIVE is unset.
     active: ${SPRING_PROFILES_ACTIVE:dev}
+  servlet:
+    multipart:
+      # Upload caps for multipart endpoints (e.g. profile-picture upload).
+      # Keep in sync with AvatarStorage.maxBytes.
+      max-file-size: 5MB
+      max-request-size: 5MB
   mongodb:
     # MongoDB connection string, injected from the environment (never hard-coded).
     uri: ${MONGODB_CONNECTION_STRING}
@@ -53,6 +59,11 @@ jwt:
 
 
 app:
+
+  avatar:
+    # Directory on the server's local disk where profile pictures are stored.
+    # Relative paths resolve against the process working directory.
+    dir: ${AVATAR_DIR:uploads/avatars}
 
   # Mailer backend: `log` writes the code to the application log (dev/test);
   # `smtp` sends real email through spring.mail.* SMTP settings.
