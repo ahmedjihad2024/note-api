@@ -3,7 +3,7 @@
 # freely during local testing.
 server:
   # Local dev port — avoids clashing with the prod default (8080).
-  port: 8181
+  port: ${PORT:8080}
   error:
     # Show stack traces only when ?trace=true is passed — handy for debugging.
     include-stacktrace: on_param

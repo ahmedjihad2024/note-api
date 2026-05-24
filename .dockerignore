@@ -1,0 +1,14 @@
+# Keep the build context small and avoid leaking local state into the image.
+.git
+.gradle
+build
+*/build
+.idea
+*.iml
+uploads
+.env
+.env.*
+!.env.example
+docs
+*.md
+.claude

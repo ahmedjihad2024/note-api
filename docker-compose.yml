@@ -1,0 +1,23 @@
+# Run the app in a container. Reads secrets/config from a local `.env` file
+# (copy .env.example -> .env and fill it in). MongoDB is external (Atlas), so no
+# database service is defined here.
+#
+#   docker compose up --build
+#
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      PORT: 8080
+    volumes:
+      # Persist uploaded avatars across restarts/rebuilds.
+      - avatars:/data/avatars
+    restart: unless-stopped
+
+volumes:
+  avatars:
