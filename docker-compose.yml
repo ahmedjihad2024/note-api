@@ -3,17 +3,19 @@
 # database service is defined here.
 #
 #   docker compose up --build
+#   docker build -t note-api
 #
 services:
   api:
     build: .
     ports:
-      - "8080:8080"
+      # host:container — must match PORT in .env (the app listens on $PORT inside).
+      - "8181:8181"
     env_file:
       - .env
-    environment:
-      SPRING_PROFILES_ACTIVE: prod
-      PORT: 8080
+#    environment:
+#      SPRING_PROFILES_ACTIVE: prod
+#      PORT: 8080
     volumes:
       # Persist uploaded avatars across restarts/rebuilds.
       - avatars:/data/avatars
