@@ -109,6 +109,22 @@ class AuthService(
     }
 
     @Transactional
+    fun resendVerificationCode(email: String): AuthResponse.VerificationRequired {
+        val user = userRepository.findByEmail(email)
+        // Privacy-preserving: only (re)send when an unverified account actually exists,
+        // but always return the same generic message so we never leak which emails are
+        // registered or already verified. issueAndSendVerificationCode replaces any
+        // existing code, so repeated calls simply refresh and resend.
+        if (user != null && !user.emailVerified) {
+            issueAndSendVerificationCode(user)
+        }
+        return AuthResponse.VerificationRequired(
+            email = email,
+            message = "error.auth.verification_code_sent".tr(),
+        )
+    }
+
+    @Transactional
     fun refresh(refreshToken: String): TokenResponse {
         if (!jwtService.validateRefreshToken(refreshToken)) {
             throw ApiException.Unauthorized("error.auth.invalid_refresh_token")

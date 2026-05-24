@@ -5,6 +5,7 @@ import com.example.note.auth.passwordReset.dto.ForgotPasswordRequest
 import com.example.note.auth.dto.LoginRequest
 import com.example.note.auth.dto.RefreshRequest
 import com.example.note.auth.dto.RegisterRequest
+import com.example.note.auth.dto.ResendVerificationRequest
 import com.example.note.auth.passwordReset.dto.ResetPasswordRequest
 import com.example.note.auth.dto.TokenResponse
 import com.example.note.auth.dto.VerifyEmailRequest
@@ -38,6 +39,10 @@ class AuthController(
     @PostMapping("/verify-email")
     fun verifyEmail(@Valid @RequestBody body: VerifyEmailRequest): ApiResponse<AuthResponse.Authenticated> =
         ApiResponse.ok(authService.verifyEmail(body.email, body.code))
+
+    @PostMapping("/verify-email/resend")
+    fun resendVerification(@Valid @RequestBody body: ResendVerificationRequest): ApiResponse<AuthResponse.VerificationRequired> =
+        ApiResponse.ok(authService.resendVerificationCode(body.email))
 
     @PostMapping("/password-reset/request")
     fun forgotPassword(@Valid @RequestBody body: ForgotPasswordRequest): ApiResponse<AuthResponse.VerificationRequired> =
