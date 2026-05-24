@@ -5,8 +5,8 @@ import org.springframework.boot.runApplication
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration
 
 @SpringBootApplication(exclude = [UserDetailsServiceAutoConfiguration::class])
-class StudingApplication
+class NoteApplication
 
 fun main(args: Array<String>) {
-	runApplication<StudingApplication>(*args)
+	runApplication<NoteApplication>(*args)
 }
