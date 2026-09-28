@@ -7,6 +7,12 @@ spring:
   application:
     # Service name — shows up in logs, Actuator /info, and metrics.
     name: note
+  datasource:
+      url: jdbc:postgresql://aws-1-eu-west-1.pooler.supabase.com:6543/postgres?prepareThreshold=0
+      username: postgres.yylrjrmjefrvbzmfudks
+      password: ${POSTGRES_PASSWORD}
+      driver-class-name: org.postgresql.Driver
+
   profiles:
     # Which profile to load. Defaults to `dev` when SPRING_PROFILES_ACTIVE is unset.
     active: ${SPRING_PROFILES_ACTIVE:dev}
@@ -52,6 +58,7 @@ spring:
         max-page-size: 100
         # Page numbers are one-indexed (?page=1 is the first page).
         one-indexed-parameters: true
+
 
 jwt:
   # Base64-encoded HMAC secret used to sign/verify JWTs. Loaded from the env.

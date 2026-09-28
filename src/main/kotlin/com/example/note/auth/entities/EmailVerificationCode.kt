@@ -1,17 +1,38 @@
 package com.example.note.auth.entities
 
-import org.bson.types.ObjectId
-import org.springframework.data.annotation.Id
-import org.springframework.data.mongodb.core.index.Indexed
-import org.springframework.data.mongodb.core.mapping.Document
+import com.example.note.user.entities.User
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.OneToOne
+import jakarta.persistence.Table
+import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.DynamicUpdate
 import java.time.Instant
 
-@Document("email_verification_codes")
+@Entity
+@Table(name = "email_verification_codes")
+@DynamicUpdate
 data class EmailVerificationCode(
-    @Id val id: ObjectId = ObjectId(),
-    @Indexed(unique = true) val userId: ObjectId,
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    var id: Long = 0,
+
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    val user: User,
+
+    @Column(nullable = false)
     val code: String,
+
+    @Column(nullable = false)
+    @CreationTimestamp
     val createdAt: Instant = Instant.now(),
-    @Indexed(expireAfter = "0s")
+
+    // TODO: add a schedule to remove expired verification codes
+    @Column(nullable = false)
     val expiresAt: Instant,
 )

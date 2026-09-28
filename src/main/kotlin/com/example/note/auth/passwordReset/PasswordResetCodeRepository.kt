@@ -1,9 +1,8 @@
 package com.example.note.auth.passwordReset
 
-import org.bson.types.ObjectId
-import org.springframework.data.mongodb.repository.MongoRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-interface PasswordResetCodeRepository : MongoRepository<PasswordResetCode, ObjectId> {
-    fun findByUserId(userId: ObjectId): PasswordResetCode?
-    fun deleteByUserId(userId: ObjectId)
+interface PasswordResetCodeRepository : JpaRepository<PasswordResetCode, Long> {
+    fun findByUserId(userId: Long): PasswordResetCode?
+    fun deleteByUserId(userId: Long)
 }

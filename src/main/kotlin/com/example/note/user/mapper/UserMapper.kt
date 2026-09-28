@@ -4,7 +4,7 @@ import com.example.note.user.entities.User
 import com.example.note.user.dto.UserResponse
 
 fun User.toResponse(avatar: String? = null): UserResponse = UserResponse(
-    id = id.toHexString(),
+    id = id,
     name = name,
     email = email,
     roles = roles.map { it.name }.toSet(),

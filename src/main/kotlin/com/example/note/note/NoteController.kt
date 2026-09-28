@@ -7,7 +7,7 @@ import com.example.note.note.dto.NoteResponse
 import com.example.note.note.dto.UpdateNoteRequest
 import com.example.note.note.mapper.toResponse
 import jakarta.validation.Valid
-import org.bson.types.ObjectId
+
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
@@ -41,19 +41,19 @@ class NoteController(
         ApiResponse.ok(PageResponse.from(noteService.getNotes(pageable)) { it.toResponse() })
 
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: ObjectId): ApiResponse<NoteResponse> =
+    fun getById(@PathVariable id: Long): ApiResponse<NoteResponse> =
         ApiResponse.ok(noteService.getOwned(id).toResponse())
 
     @PutMapping("/{id}")
     fun updateNote(
-        @PathVariable id: ObjectId,
+        @PathVariable id: Long,
         @Valid @RequestBody body: UpdateNoteRequest,
     ): ApiResponse<NoteResponse> =
         ApiResponse.ok(noteService.update(id, body).toResponse())
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteNote(@PathVariable id: ObjectId) {
+    fun deleteNote(@PathVariable id: Long) {
         noteService.delete(id)
     }
 }

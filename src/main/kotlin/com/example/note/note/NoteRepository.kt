@@ -1,12 +1,13 @@
 package com.example.note.note
 
-import org.bson.types.ObjectId
+
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.data.mongodb.repository.MongoRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-interface NoteRepository: MongoRepository<Note, ObjectId> {
 
-    fun findByOwnerId(ownerId: ObjectId, pageable: Pageable): Page<Note>
+interface NoteRepository: JpaRepository<Note, Long> {
+
+    fun findByOwnerId(ownerId: Long, pageable: Pageable): Page<Note>
 
 }

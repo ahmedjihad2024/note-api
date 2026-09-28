@@ -24,10 +24,10 @@ class JwtService(
     val refreshTokenValidityMs: Long
         get() = 30L * 24L * 60L * 60L * 1000L // 30 days
 
-    fun generateAccessToken(userId: String, roles: Set<Role>): String =
+    fun generateAccessToken(userId: Long, roles: Set<Role>): String =
         generateToken(userId, "access", accessTokenValidityMs, roles)
 
-    fun generateRefreshToken(userId: String): String =
+    fun generateRefreshToken(userId: Long): String =
         generateToken(userId, "refresh", refreshTokenValidityMs, roles = null)
 
     fun validateAccessToken(token: String): Boolean {
@@ -42,10 +42,10 @@ class JwtService(
         return tokenType == "refresh"
     }
 
-    fun getUserIdFromToken(token: String): String {
+    fun getUserIdFromToken(token: String): Long {
         val claims = parseAllClaims(token)
             ?: throw IllegalArgumentException("Invalid token.")
-        return claims.subject
+        return claims.subject.toLong()
     }
 
     fun getRolesFromToken(token: String): Set<Role> {
@@ -66,12 +66,12 @@ class JwtService(
         return claims.expiration.toInstant()
     }
 
-    private fun generateToken(userId: String, type: String, validityMs: Long, roles: Set<Role>?): String {
+    private fun generateToken(userId: Long, type: String, validityMs: Long, roles: Set<Role>?): String {
         val now = Date()
         val expiry = Date(now.time + validityMs)
         val builder = Jwts.builder()
             .id(UUID.randomUUID().toString())
-            .subject(userId)
+            .subject(userId.toString())
             .claim("type", type)
             .issuedAt(now)
             .expiration(expiry)

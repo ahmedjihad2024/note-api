@@ -20,7 +20,6 @@ import com.example.note.security.jwt.JwtService
 import com.example.note.user.entities.User
 import com.example.note.user.repository.UserRepository
 import com.example.note.user.mapper.toResponse
-import org.bson.types.ObjectId
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -43,20 +42,21 @@ class AuthService(
     @Transactional
     fun register(name: String, email: String, password: String): AuthResponse.VerificationRequired {
         val existing = userRepository.findByEmail(email)
-        if (existing != null) {
+        val user = if (existing != null) {
             if (existing.emailVerified) {
                 throw ApiException.Conflict("error.auth.email_already_exists")
             }
             emailVerificationCodeRepository.deleteByUserId(existing.id)
-            userRepository.delete(existing)
-        }
-        val user = userRepository.save(
-            User(
-                name = name,
-                email = email,
-                hashedPassword = passwordEncoder.encode(password),
+            existing.apply {
+                this.name = name
+                this.hashedPassword = passwordEncoder.encode(password)
+            }
+            userRepository.save(existing)
+        } else {
+            userRepository.save(
+                User(name = name, email = email, hashedPassword = passwordEncoder.encode(password))
             )
-        )
+        }
         issueAndSendVerificationCode(user)
         return AuthResponse.VerificationRequired(
             email = user.email,
@@ -129,7 +129,7 @@ class AuthService(
         if (!jwtService.validateRefreshToken(refreshToken)) {
             throw ApiException.Unauthorized("error.auth.invalid_refresh_token")
         }
-        val userId = ObjectId(jwtService.getUserIdFromToken(refreshToken))
+        val userId = jwtService.getUserIdFromToken(refreshToken)
         val hashed = refreshToken.sha256()
 
         val stored = refreshTokenRepository.findByUserIdAndHashedToken(userId, hashed)
@@ -145,7 +145,7 @@ class AuthService(
 
     fun logout(refreshToken: String, accessToken: String?) {
         if (jwtService.validateRefreshToken(refreshToken)) {
-            val userId = ObjectId(jwtService.getUserIdFromToken(refreshToken))
+            val userId = jwtService.getUserIdFromToken(refreshToken)
             refreshTokenRepository.deleteByUserIdAndHashedToken(userId, refreshToken.sha256())
         }
         if (accessToken != null && jwtService.validateAccessToken(accessToken)) {
@@ -166,7 +166,7 @@ class AuthService(
             val plain = verificationCodeGenerator.generate()
             passwordResetCodeRepository.save(
                 PasswordResetCode(
-                    userId = user.id,
+                    user = user,
                     code = plain.sha256(),
                     expiresAt = Instant.now().plus(VERIFICATION_CODE_TTL_MINUTES, ChronoUnit.MINUTES),
                 )
@@ -224,7 +224,7 @@ class AuthService(
         val plain = verificationCodeGenerator.generate()
         emailVerificationCodeRepository.save(
             EmailVerificationCode(
-                userId = user.id,
+                user = user,
                 code = plain.sha256(),
                 expiresAt = Instant.now().plus(VERIFICATION_CODE_TTL_MINUTES, ChronoUnit.MINUTES),
             )
@@ -233,12 +233,12 @@ class AuthService(
     }
 
     private fun issueTokens(user: User): TokenResponse {
-        val accessToken = jwtService.generateAccessToken(user.id.toHexString(), user.roles)
-        val refreshToken = jwtService.generateRefreshToken(user.id.toHexString())
+        val accessToken = jwtService.generateAccessToken(user.id, user.roles)
+        val refreshToken = jwtService.generateRefreshToken(user.id)
 
         refreshTokenRepository.save(
             RefreshToken(
-                userId = user.id,
+                user = user,
                 hashedToken = refreshToken.sha256(),
                 expiresAt = Instant.now().plus(jwtService.refreshTokenValidityMs, ChronoUnit.MILLIS),
             )

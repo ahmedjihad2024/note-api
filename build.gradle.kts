@@ -3,6 +3,7 @@ plugins {
 	kotlin("plugin.spring") version "2.2.21"
 	id("org.springframework.boot") version "4.0.6"
 	id("io.spring.dependency-management") version "1.1.7"
+	kotlin("plugin.jpa") version "2.2.21"
 }
 
 group = "com.example"
@@ -25,7 +26,10 @@ dependencies {
 //	implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive") // reactive
 
 	// Blocking MongoDB integration via Spring Data: repositories, MongoTemplate, and document mapping.
-	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+//	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	runtimeOnly("org.postgresql:postgresql")
 
 	// Spring Security core: authentication, authorization, filter chain, CSRF, and method security.
 	implementation("org.springframework.boot:spring-boot-starter-security")

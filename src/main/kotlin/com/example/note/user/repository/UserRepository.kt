@@ -1,10 +1,9 @@
 package com.example.note.user.repository
 
 import com.example.note.user.entities.User
-import org.bson.types.ObjectId
-import org.springframework.data.mongodb.repository.MongoRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-interface UserRepository: MongoRepository<User, ObjectId> {
+interface UserRepository: JpaRepository<User, Long> {
     fun findByEmail(email: String): User?
     fun findByName(name: String): User?
 }

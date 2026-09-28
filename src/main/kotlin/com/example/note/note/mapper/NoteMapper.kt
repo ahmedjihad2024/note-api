@@ -3,24 +3,25 @@ package com.example.note.note.mapper
 import com.example.note.note.Note
 import com.example.note.note.dto.NoteRequest
 import com.example.note.note.dto.NoteResponse
-import org.bson.types.ObjectId
+import com.example.note.user.entities.User
+
 import java.time.Instant
 
 private const val DEFAULT_COLOR = 0xFFFFFFL
 
 fun Note.toResponse() = NoteResponse(
-    id = id.toHexString(),
+    id = id,
     title = title,
     content = content,
     color = color,
     createdAt = createdAt,
-    updateAt = updateAt,
+    updateAt = updatedAt,
 )
 
-fun NoteRequest.toEntity(ownerId: ObjectId) = Note(
+fun NoteRequest.toEntity(user: User) = Note(
     title = title,
     content = content,
     color = color ?: DEFAULT_COLOR,
-    ownerId = ownerId,
+    owner = user,
     createdAt = Instant.now(),
 )

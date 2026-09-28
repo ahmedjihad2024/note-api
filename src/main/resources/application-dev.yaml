@@ -1,14 +1,21 @@
 # Development profile: verbose logging, permissive CORS for local frontends,
 # detailed error responses, and loose rate limits so the API can be exercised
 # freely during local testing.
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  web:
+    error:
+      # Show stack traces only when ?trace=true is passed — handy for debugging.
+      include-message: always
+      # Always include the exception message in error responses.
+      include-stacktrace: on_param
 server:
   # Local dev port — avoids clashing with the prod default (8080).
   port: ${PORT:8080}
-  error:
-    # Show stack traces only when ?trace=true is passed — handy for debugging.
-    include-stacktrace: on_param
-    # Always include the exception message in error responses.
-    include-message: always
+
 
 logging:
   level:

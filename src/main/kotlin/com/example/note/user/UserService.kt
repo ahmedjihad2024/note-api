@@ -12,7 +12,7 @@ import com.example.note.user.entities.EmailChangeRequest
 import com.example.note.user.entities.User
 import com.example.note.user.repository.EmailChangeRequestRepository
 import com.example.note.user.repository.UserRepository
-import org.bson.types.ObjectId
+
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -31,8 +31,8 @@ class UserService(
     private val avatarStorage: AvatarStorage,
     private val verificationCodeGenerator: VerificationCodeGenerator,
 ) {
-    fun me(id: String): User {
-        return userRepository.findById(ObjectId(id))
+    fun me(id: Long): User {
+        return userRepository.findById(id)
             .orElseThrow { ApiException.NotFound("error.user.not_found") }
     }
 
@@ -47,8 +47,8 @@ class UserService(
         }
 
     @Transactional
-    fun uploadAvatar(id: String, file: MultipartFile): User {
-        val user = userRepository.findById(ObjectId(id))
+    fun uploadAvatar(id: Long, file: MultipartFile): User {
+        val user = userRepository.findById(id)
             .orElseThrow { ApiException.NotFound("error.user.not_found") }
         val previousFilename = user.avatarFilename
         val newFilename = avatarStorage.store(file)
@@ -59,16 +59,16 @@ class UserService(
     }
 
     @Transactional
-    fun updateName(id: String, name: String?): User {
-        val user = userRepository.findById(ObjectId(id))
+    fun updateName(id: Long, name: String?): User {
+        val user = userRepository.findById(id)
             .orElseThrow { ApiException.NotFound("error.user.not_found") }
         if (name == null) return user
         return userRepository.save(user.copy(name = name))
     }
 
     @Transactional
-    fun changePassword(id: String, currentPassword: String, newPassword: String): AuthResponse.Authenticated {
-        val user = userRepository.findById(ObjectId(id))
+    fun changePassword(id: Long, currentPassword: String, newPassword: String): AuthResponse.Authenticated {
+        val user = userRepository.findById(id)
             .orElseThrow { ApiException.NotFound("error.user.not_found") }
         val stored = user.hashedPassword
             ?: throw ApiException.BadRequest("error.user.invalid_current_password")
@@ -82,8 +82,8 @@ class UserService(
     }
 
     @Transactional
-    fun changeEmail(id: String, newEmail: String): AuthResponse.VerificationRequired {
-        val user = userRepository.findById(ObjectId(id))
+    fun changeEmail(id: Long, newEmail: String): AuthResponse.VerificationRequired {
+        val user = userRepository.findById(id)
             .orElseThrow { ApiException.NotFound("error.user.not_found") }
         if (newEmail == user.email) {
             throw ApiException.BadRequest("error.user.email_same_as_current")
@@ -96,7 +96,7 @@ class UserService(
         val plain = verificationCodeGenerator.generate()
         emailChangeRequestRepository.save(
             EmailChangeRequest(
-                userId = user.id,
+                user = user,
                 newEmail = newEmail,
                 code = plain.sha256(),
                 expiresAt = Instant.now().plus(VERIFICATION_CODE_TTL_MINUTES, ChronoUnit.MINUTES),
@@ -110,8 +110,8 @@ class UserService(
     }
 
     @Transactional
-    fun verifyChangeEmailCode(id: String, code: String): User {
-        val user = userRepository.findById(ObjectId(id))
+    fun verifyChangeEmailCode(id: Long, code: String): User {
+        val user = userRepository.findById(id)
             .orElseThrow { ApiException.NotFound("error.user.not_found") }
         val pending = emailChangeRequestRepository.findByUserId(user.id)
             ?: throw ApiException.BadRequest("error.user.no_pending_email_change")

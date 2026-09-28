@@ -27,7 +27,7 @@ class UserController(
 ) {
     @GetMapping("/me")
     fun me(
-        @AuthenticationPrincipal currentUserId: String,
+        @AuthenticationPrincipal currentUserId: Long,
     ): ApiResponse<UserResponse> {
         val user = userService.me(currentUserId)
         return ApiResponse.ok(user.toResponse(userService.avatarUrl(user)))
@@ -36,7 +36,7 @@ class UserController(
     @PatchMapping("/me")
     fun updateName(
         @Valid @RequestBody body: UpdateRequest,
-        @AuthenticationPrincipal currentUserId: String,
+        @AuthenticationPrincipal currentUserId: Long,
     ): ApiResponse<UserResponse> {
         val user = userService.updateName(currentUserId, body.name)
         return ApiResponse.ok(user.toResponse(userService.avatarUrl(user)))
@@ -45,7 +45,7 @@ class UserController(
     @PostMapping("/me/avatar", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
     fun uploadAvatar(
         @RequestParam("file") file: MultipartFile,
-        @AuthenticationPrincipal currentUserId: String,
+        @AuthenticationPrincipal currentUserId: Long,
     ): ApiResponse<UserResponse> {
         val user = userService.uploadAvatar(currentUserId, file)
         return ApiResponse.ok(user.toResponse(userService.avatarUrl(user)))
@@ -54,7 +54,7 @@ class UserController(
     @PostMapping("/me/change-password")
     fun changePassword(
         @Valid @RequestBody body: ChangePasswordRequest,
-        @AuthenticationPrincipal currentUserId: String,
+        @AuthenticationPrincipal currentUserId: Long,
     ): ApiResponse<AuthResponse.Authenticated> = ApiResponse.ok(
         userService.changePassword(currentUserId, body.currentPassword, body.newPassword),
     )
@@ -62,7 +62,7 @@ class UserController(
     @PostMapping("/me/change-email/request")
     fun changeEmail(
         @Valid @RequestBody body: ChangeEmailRequest,
-        @AuthenticationPrincipal currentUserId: String,
+        @AuthenticationPrincipal currentUserId: Long,
     ): ApiResponse<AuthResponse.VerificationRequired> = ApiResponse.ok(
         userService.changeEmail(currentUserId, body.newEmail),
     )
@@ -70,7 +70,7 @@ class UserController(
     @PostMapping("/me/change-email/verify")
     fun verifyChangeEmailCode(
         @Valid @RequestBody body: ConfirmEmailChangeRequest,
-        @AuthenticationPrincipal currentUserId: String,
+        @AuthenticationPrincipal currentUserId: Long,
     ): ApiResponse<UserResponse> {
         val user = userService.verifyChangeEmailCode(currentUserId, body.code)
         return ApiResponse.ok(user.toResponse(userService.avatarUrl(user)))

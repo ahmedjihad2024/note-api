@@ -4,7 +4,6 @@ import com.example.note.common.exception.ApiException
 import com.example.note.user.enums.Role
 import com.example.note.user.entities.User
 import com.example.note.user.repository.UserRepository
-import org.bson.types.ObjectId
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -17,7 +16,7 @@ class AdminService(
     fun listUsers(pageable: Pageable): Page<User> =
         userRepository.findAll(pageable)
 
-    fun updateRoles(targetUserId: ObjectId, currentUserId: String, roleNames: Set<String>): User {
+    fun updateRoles(targetUserId: Long, currentUserId: String, roleNames: Set<String>): User {
         if (targetUserId.toHexString() == currentUserId) {
             throw ApiException.BadRequest("error.admin.cannot_modify_self")
         }

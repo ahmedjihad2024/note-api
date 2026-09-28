@@ -6,7 +6,6 @@ import com.example.note.common.dto.PageResponse
 import com.example.note.user.dto.UserResponse
 import com.example.note.user.mapper.toResponse
 import jakarta.validation.Valid
-import org.bson.types.ObjectId
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
@@ -35,7 +34,7 @@ class AdminController(
 
     @PatchMapping("/users/{id}/roles")
     fun updateRoles(
-        @PathVariable id: ObjectId,
+        @PathVariable id: Long,
         @Valid @RequestBody body: UpdateUserRolesRequest,
         @AuthenticationPrincipal currentUserId: String,
     ): ApiResponse<UserResponse> =

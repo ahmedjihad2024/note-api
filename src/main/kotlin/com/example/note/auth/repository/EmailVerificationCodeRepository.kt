@@ -1,10 +1,10 @@
 package com.example.note.auth.repository
 
 import com.example.note.auth.entities.EmailVerificationCode
-import org.bson.types.ObjectId
-import org.springframework.data.mongodb.repository.MongoRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-interface EmailVerificationCodeRepository : MongoRepository<EmailVerificationCode, ObjectId> {
-    fun findByUserId(userId: ObjectId): EmailVerificationCode?
-    fun deleteByUserId(userId: ObjectId)
+interface EmailVerificationCodeRepository : JpaRepository<EmailVerificationCode, Long> {
+
+    fun findByUserId(userId: Long): EmailVerificationCode?
+    fun deleteByUserId(userId: Long)
 }

@@ -1,8 +1,8 @@
 package com.example.note.auth.repository
 
 import com.example.note.auth.entities.RevokedAccessToken
-import org.springframework.data.mongodb.repository.MongoRepository
+import org.springframework.data.jpa.repository.JpaRepository
 
-interface RevokedAccessTokenRepository : MongoRepository<RevokedAccessToken, String> {
+interface RevokedAccessTokenRepository : JpaRepository<RevokedAccessToken, Long> {
     fun existsByJti(jti: String): Boolean
 }
